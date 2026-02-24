@@ -24,6 +24,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
         ipcRenderer.invoke('ai-improve-persona', { agentId, instruction }),
     saveApiKey: (provider, key) => ipcRenderer.invoke('save-api-key', { provider, key }),
     loadApiKeys: () => ipcRenderer.invoke('load-api-keys'),
+    getTheme: () => ipcRenderer.invoke('get-theme'),
+    setTheme: (mode) => ipcRenderer.invoke('set-theme', mode),
     onStreamChunk: (callback) => {
         ipcRenderer.on('stream-chunk', (_event, data) => {
             if (typeof callback === 'function') {
@@ -109,8 +111,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
             }
         });
     },
+    onSystemThemeChanged: (callback) => {
+        ipcRenderer.on('system-theme-changed', (_event, payload) => {
+            if (typeof callback === 'function') {
+                callback(payload);
+            }
+        });
+    },
     removeMeetingListeners: () => {
-        ['meeting-speaker-start', 'meeting-chunk', 'meeting-speaker-end', 'meeting-ended', 'agents-updated'].forEach((channel) => {
+        ['meeting-speaker-start', 'meeting-chunk', 'meeting-speaker-end', 'meeting-ended', 'agents-updated', 'system-theme-changed'].forEach((channel) => {
             ipcRenderer.removeAllListeners(channel);
         });
     },

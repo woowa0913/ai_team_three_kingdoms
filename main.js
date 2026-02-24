@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, screen, Tray, nativeImage } = require('electron');
+const { app, BrowserWindow, ipcMain, screen, Tray, nativeImage, nativeTheme } = require('electron');
 const path = require('path');
 const Store = require('electron-store');
 const { createDashboardWindow, createSettingsWindow, createMeetingWindow, createAddAgentWindow } = require('./main/window-manager');
@@ -35,6 +35,23 @@ function broadcastAgentsUpdated() {
     if (widgetWindow && !widgetWindow.isDestroyed()) {
         widgetWindow.webContents.send('agents-updated', { agents });
     }
+}
+
+function getThemeState() {
+    const savedRaw = store.get('theme-mode', 'system');
+    const saved = ['dark', 'light', 'system'].includes(savedRaw) ? savedRaw : 'system';
+    const systemIsDark = nativeTheme.shouldUseDarkColors;
+    const effective = saved === 'system' ? (systemIsDark ? 'dark' : 'light') : saved;
+    return { saved, systemIsDark, effective };
+}
+
+function broadcastSystemThemeChanged() {
+    const payload = getThemeState();
+    BrowserWindow.getAllWindows().forEach((win) => {
+        if (!win.isDestroyed()) {
+            win.webContents.send('system-theme-changed', payload);
+        }
+    });
 }
 
 function createTrayIcon() {
@@ -173,6 +190,7 @@ async function runMeetingLoop(sessionId) {
 app.whenReady().then(() => {
     createWidgetWindow();
     createTrayIcon();
+    nativeTheme.on('updated', broadcastSystemThemeChanged);
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {
             createWidgetWindow();
@@ -329,6 +347,22 @@ ipcMain.handle('load-api-keys', async () => {
         openai: mask(store.get('api-key-openai', '')),
         google: mask(store.get('api-key-google', '')),
     };
+});
+ipcMain.handle('get-theme', async () => {
+    return getThemeState();
+});
+ipcMain.handle('set-theme', async (_event, mode) => {
+    if (!['dark', 'light', 'system'].includes(mode)) {
+        return { ok: false, error: '지원하지 않는 테마 모드입니다.' };
+    }
+    store.set('theme-mode', mode);
+    const payload = getThemeState();
+    BrowserWindow.getAllWindows().forEach((win) => {
+        if (!win.isDestroyed()) {
+            win.webContents.send('system-theme-changed', payload);
+        }
+    });
+    return { ok: true, ...payload };
 });
 ipcMain.on('open-settings', () => {
     createSettingsWindow();

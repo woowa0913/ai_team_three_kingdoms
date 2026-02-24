@@ -1,14 +1,5 @@
-:root {
-    /* 기존 디자인 시스템 유지 (dashboard.css 참조) */
-    --bg-overlay: rgba(20, 18, 18, 0.95);
-    --text-color: #ECECEC;
-    --text-muted: #8E8E93;
-    --accent-gold: #C9A84C;
-    --accent-crimson: #8B1A1A;
-    --border-color: rgba(255, 255, 255, 0.1);
-    --border-radius-base: 12px;
-    --hover-bg: rgba(255, 255, 255, 0.1);
-}
+/* AI Orchestra — Settings
+   색상 변수는 themes.css 에서 관리. */
 
 body,
 html {
