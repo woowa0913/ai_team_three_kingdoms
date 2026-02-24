@@ -33,13 +33,16 @@ function createTrayIcon() {
     return tray;
 }
 function createWidgetWindow() {
-    const { height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
-    const windowHeight = 100;
+    const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
+    const agents = agentStore.getAgents();
+    const widgetWidth = Math.max(400, agents.length * 96 + 120);
+    const windowHeight = 140;
+    const xPosition = Math.max(0, Math.floor((screenWidth - widgetWidth) / 2));
     const yPosition = screenHeight - windowHeight - 20;
 
     widgetWindow = new BrowserWindow({
-        width: 400,
-        height: 100,
+        width: widgetWidth,
+        height: windowHeight,
         show: false,
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
@@ -50,6 +53,7 @@ function createWidgetWindow() {
         transparent: true,
         alwaysOnTop: true,
         resizable: false,
+        x: xPosition,
         y: yPosition,
     });
     // Keep widget visible on all workspaces (macOS)
