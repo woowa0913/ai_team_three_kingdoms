@@ -5,30 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Orchestra - 대시보드</title>
+    <link rel="stylesheet" href="styles/themes.css">
     <link rel="stylesheet" href="styles/dashboard.css">
-    <!-- Toast 팝업용 기본 스타일 추가 -->
-    <style>
-        .toast {
-            position: fixed;
-            bottom: 80px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(139, 26, 26, 0.9);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 8px;
-            opacity: 0;
-            transition: opacity 0.3s;
-            pointer-events: none;
-            z-index: 1000;
-            font-size: 14px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-        }
-
-        .toast.visible {
-            opacity: 1;
-        }
-    </style>
 </head>
 
 <body>
@@ -89,8 +67,36 @@
         <!-- 페르소나 탭 -->
         <div class="tab-content" id="tab-persona">
             <div class="persona-view">
-                <div class="persona-name" id="persona-name"></div>
-                <div class="persona-desc" id="persona-desc"></div>
+                <div class="persona-header">
+                    <span class="persona-name" id="persona-name"></span>
+                    <button class="btn-edit-persona" id="btn-edit-persona">✏️ 편집</button>
+                </div>
+
+                <div class="persona-readonly" id="persona-readonly">
+                    <p class="persona-desc" id="persona-desc"></p>
+                </div>
+
+                <div class="persona-edit" id="persona-edit" hidden>
+                    <textarea class="persona-textarea" id="persona-textarea"></textarea>
+                    <div class="persona-actions">
+                        <button class="btn-ai-help" id="btn-ai-help">🪭 AI와 함께 수정</button>
+                        <button class="btn-save-persona" id="btn-save-persona">저장</button>
+                        <button class="btn-cancel-persona" id="btn-cancel-persona">취소</button>
+                    </div>
+
+                    <div class="ai-help-panel" id="ai-help-panel" hidden>
+                        <div class="ai-help-title">🪭 제갈량에게 지시하기</div>
+                        <div class="ai-help-input-row">
+                            <input type="text" class="ai-help-input" id="ai-help-input" placeholder="이 에이전트가 더 창의적이면 좋겠어">
+                            <button class="btn-ai-send" id="btn-ai-send">▶</button>
+                        </div>
+                        <div class="ai-help-response" id="ai-help-response"></div>
+                        <div class="ai-help-footer">
+                            <button class="btn-apply-suggestion" id="btn-apply-suggestion" disabled>이 제안 적용</button>
+                            <button class="btn-close-ai-help" id="btn-close-ai-help">닫기</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -102,7 +108,7 @@
         </div>
     </div>
 
-    <!-- 코덱스가 짠 로직 파일 연결 -->
+    <script src="js/theme.js"></script>
     <script src="js/dashboard.js"></script>
 </body>
 

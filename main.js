@@ -98,6 +98,22 @@ function createMessage(role, content, agentId) {
         agentId,
     };
 }
+
+function buildPersonaImprovePrompt(agent, instruction) {
+    const lines = [
+        `대상 에이전트: ${agent.name}`,
+        `현재 페르소나:`,
+        agent.persona || '(없음)',
+        '',
+        `사용자 지시: ${instruction}`,
+        '',
+        '요구사항:',
+        '- 지시를 반영한 개선된 페르소나만 출력',
+        '- 설명/서론/불릿 없이 최종 페르소나 본문만 출력',
+        '- 한국어로 출력',
+    ];
+    return lines.join('\n');
+}
 function safeSendToMeeting(channel, payload) {
     if (!meetingSender || meetingSender.isDestroyed()) {
         return;
@@ -222,6 +238,69 @@ ipcMain.handle('get-chat-history', async (_event, agentId) => {
 ipcMain.handle('clear-history', async (_event, agentId) => {
     agentStore.clearHistory(agentId);
     return { ok: true };
+});
+ipcMain.handle('update-agent-persona', async (_event, payload) => {
+    try {
+        const updated = agentStore.updateAgentPersona(payload?.agentId, payload?.persona);
+        broadcastAgentsUpdated();
+        return { ok: true, agent: updated };
+    } catch (error) {
+        return { ok: false, error: error.message || '페르소나 저장에 실패했습니다.' };
+    }
+});
+ipcMain.handle('ai-improve-persona', async (event, payload) => {
+    try {
+        const agentId = payload?.agentId;
+        const instruction = typeof payload?.instruction === 'string' ? payload.instruction.trim() : '';
+        if (!agentId) {
+            throw new Error('agentId가 필요합니다.');
+        }
+        if (!instruction) {
+            throw new Error('개선 지시를 입력해주세요.');
+        }
+
+        const targetAgent = agentStore.getAgent(agentId);
+        if (!targetAgent) {
+            throw new Error('대상 에이전트를 찾을 수 없습니다.');
+        }
+
+        const orchestrator = agentStore.getAgent('agent-1');
+        if (!orchestrator) {
+            throw new Error('오케스트레이터(agent-1)를 찾을 수 없습니다.');
+        }
+
+        const systemPrompt = '현재 페르소나를 보고 사용자 지시에 따라 개선된 페르소나 텍스트만 반환해줘.';
+        const messages = [{ role: 'user', content: buildPersonaImprovePrompt(targetAgent, instruction) }];
+        let suggestion = '';
+
+        await apiManager.streamChat(
+            orchestrator.provider,
+            orchestrator.model,
+            systemPrompt,
+            messages,
+            (chunk) => {
+                suggestion += chunk;
+                if (!event.sender.isDestroyed()) {
+                    event.sender.send('persona-stream-chunk', { chunk });
+                }
+            },
+            () => {
+                if (!event.sender.isDestroyed()) {
+                    event.sender.send('persona-stream-end');
+                }
+            },
+            () => { }
+        );
+
+        return { ok: true, suggestion: suggestion.trim() };
+    } catch (error) {
+        if (!event.sender.isDestroyed()) {
+            event.sender.send('persona-stream-error', {
+                message: error.message || '페르소나 AI 개선에 실패했습니다.',
+            });
+        }
+        return { ok: false, error: error.message || '페르소나 AI 개선에 실패했습니다.' };
+    }
 });
 ipcMain.handle('save-api-key', async (_event, payload) => {
     const provider = payload?.provider;

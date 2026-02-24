@@ -5,6 +5,9 @@ const state = {
     isStreaming: false,
     streamingMessageEl: null,
     streamingContentEl: null,
+    isPersonaEditMode: false,
+    isPersonaAiStreaming: false,
+    personaSuggestion: '',
 };
 function qs(selectors) {
     for (const selector of selectors) {
@@ -142,9 +145,11 @@ async function loadAgentMeta(agentId) {
     // 새 로직: 페르소나 및 능력/스킬 탭 채우기
     const personaName = document.getElementById('persona-name');
     const personaDesc = document.getElementById('persona-desc');
+    const personaTextarea = document.getElementById('persona-textarea');
     const expertiseText = document.getElementById('expertise-text');
     if (personaName) personaName.textContent = agent.name || '';
     if (personaDesc) personaDesc.textContent = agent.persona || '';
+    if (personaTextarea) personaTextarea.value = agent.persona || '';
     if (expertiseText) expertiseText.textContent = agent.expertise || '';
 
     // API 키 상태 확인
@@ -159,6 +164,176 @@ async function loadAgentMeta(agentId) {
             if (btn) btn.addEventListener('click', () => window.electronAPI.openSettings());
         }
     }
+}
+
+function setPersonaEditMode(enabled) {
+    state.isPersonaEditMode = enabled;
+    const readonlyEl = document.getElementById('persona-readonly');
+    const editEl = document.getElementById('persona-edit');
+    const aiHelpPanel = document.getElementById('ai-help-panel');
+    if (readonlyEl) {
+        readonlyEl.hidden = enabled;
+    }
+    if (editEl) {
+        editEl.hidden = !enabled;
+    }
+    if (!enabled && aiHelpPanel) {
+        aiHelpPanel.hidden = true;
+    }
+}
+
+function setPersonaAiStreaming(isStreaming) {
+    state.isPersonaAiStreaming = isStreaming;
+    const sendBtn = document.getElementById('btn-ai-send');
+    if (sendBtn) {
+        sendBtn.disabled = isStreaming;
+    }
+}
+
+function resetPersonaSuggestion() {
+    state.personaSuggestion = '';
+    const response = document.getElementById('ai-help-response');
+    const applyBtn = document.getElementById('btn-apply-suggestion');
+    if (response) {
+        response.textContent = '';
+    }
+    if (applyBtn) {
+        applyBtn.disabled = true;
+    }
+}
+
+function bindPersonaEditor() {
+    const btnEdit = document.getElementById('btn-edit-persona');
+    const btnSave = document.getElementById('btn-save-persona');
+    const btnCancel = document.getElementById('btn-cancel-persona');
+    const btnAiHelp = document.getElementById('btn-ai-help');
+    const btnCloseAiHelp = document.getElementById('btn-close-ai-help');
+    const btnAiSend = document.getElementById('btn-ai-send');
+    const btnApplySuggestion = document.getElementById('btn-apply-suggestion');
+    const personaTextarea = document.getElementById('persona-textarea');
+    const personaDesc = document.getElementById('persona-desc');
+    const aiHelpPanel = document.getElementById('ai-help-panel');
+    const aiHelpInput = document.getElementById('ai-help-input');
+
+    if (!btnEdit || !personaTextarea || !personaDesc) {
+        return;
+    }
+
+    btnEdit.addEventListener('click', () => {
+        personaTextarea.value = state.agent?.persona || '';
+        setPersonaEditMode(true);
+    });
+
+    btnCancel?.addEventListener('click', () => {
+        personaTextarea.value = state.agent?.persona || '';
+        setPersonaEditMode(false);
+    });
+
+    btnSave?.addEventListener('click', async () => {
+        const nextPersona = personaTextarea.value.trim();
+        if (!nextPersona) {
+            showToast('페르소나를 입력해주세요.');
+            return;
+        }
+        try {
+            const result = await window.electronAPI.updateAgentPersona(state.agentId, nextPersona);
+            if (!result?.ok) {
+                throw new Error(result?.error || '저장 실패');
+            }
+            if (state.agent) {
+                state.agent.persona = nextPersona;
+            }
+            personaDesc.textContent = nextPersona;
+            setPersonaEditMode(false);
+            showToast('페르소나 저장 완료');
+        } catch (error) {
+            showToast(error.message || '페르소나 저장 실패');
+        }
+    });
+
+    btnAiHelp?.addEventListener('click', () => {
+        if (!aiHelpPanel) {
+            return;
+        }
+        aiHelpPanel.hidden = !aiHelpPanel.hidden;
+        if (!aiHelpPanel.hidden) {
+            aiHelpInput?.focus();
+        }
+    });
+
+    btnCloseAiHelp?.addEventListener('click', () => {
+        if (aiHelpPanel) {
+            aiHelpPanel.hidden = true;
+        }
+    });
+
+    btnAiSend?.addEventListener('click', async () => {
+        if (state.isPersonaAiStreaming) {
+            return;
+        }
+        const instruction = aiHelpInput?.value.trim() || '';
+        if (!instruction) {
+            showToast('개선 지시를 입력해주세요.');
+            return;
+        }
+
+        resetPersonaSuggestion();
+        setPersonaAiStreaming(true);
+        try {
+            const result = await window.electronAPI.aiImprovePersona(state.agentId, instruction);
+            if (!result?.ok) {
+                throw new Error(result?.error || 'AI 개선 실패');
+            }
+            if (typeof result?.suggestion === 'string' && !state.personaSuggestion) {
+                state.personaSuggestion = result.suggestion;
+                const response = document.getElementById('ai-help-response');
+                if (response) {
+                    response.textContent = result.suggestion;
+                }
+            }
+            const applyButton = document.getElementById('btn-apply-suggestion');
+            if (applyButton) {
+                applyButton.disabled = state.personaSuggestion.trim().length === 0;
+            }
+        } catch (error) {
+            showToast(error.message || 'AI 개선 실패');
+            setPersonaAiStreaming(false);
+        }
+    });
+
+    btnApplySuggestion?.addEventListener('click', () => {
+        if (!state.personaSuggestion.trim()) {
+            return;
+        }
+        personaTextarea.value = state.personaSuggestion.trim();
+        showToast('AI 제안을 편집창에 적용했습니다.');
+    });
+}
+
+function handlePersonaStreamChunk(data) {
+    const chunk = typeof data?.chunk === 'string' ? data.chunk : '';
+    if (!chunk) {
+        return;
+    }
+    state.personaSuggestion += chunk;
+    const response = document.getElementById('ai-help-response');
+    if (response) {
+        response.textContent += chunk;
+        response.scrollTop = response.scrollHeight;
+    }
+}
+
+function handlePersonaStreamEnd() {
+    setPersonaAiStreaming(false);
+    const applyBtn = document.getElementById('btn-apply-suggestion');
+    if (applyBtn) {
+        applyBtn.disabled = state.personaSuggestion.trim().length === 0;
+    }
+}
+
+function handlePersonaStreamError(data) {
+    setPersonaAiStreaming(false);
+    showToast(data?.message || 'AI 제안 생성 중 오류가 발생했습니다.');
 }
 
 function closeAgentSwitcherDropdown() {
@@ -377,6 +552,10 @@ async function init() {
     }
 
     bindTabs();
+    bindPersonaEditor();
+    setPersonaEditMode(false);
+    setPersonaAiStreaming(false);
+    resetPersonaSuggestion();
 
     const messageInput = ui.messageInput();
     const sendButton = ui.sendButton();
@@ -403,6 +582,9 @@ async function init() {
     window.electronAPI.onStreamChunk(handleStreamChunk);
     window.electronAPI.onStreamEnd(handleStreamEnd);
     window.electronAPI.onStreamError(handleStreamError);
+    window.electronAPI.onPersonaStreamChunk(handlePersonaStreamChunk);
+    window.electronAPI.onPersonaStreamEnd(handlePersonaStreamEnd);
+    window.electronAPI.onPersonaStreamError(handlePersonaStreamError);
     window.addEventListener('beforeunload', () => {
         window.electronAPI.removeStreamListeners();
     });

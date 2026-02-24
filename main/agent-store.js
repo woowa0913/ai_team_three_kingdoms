@@ -152,6 +152,27 @@ function deleteAgent(agentId) {
     return nextAgents;
 }
 
+function updateAgentPersona(agentId, persona) {
+    const safePersona = typeof persona === 'string' ? persona.trim() : '';
+    if (!agentId) {
+        throw new Error('agentId가 필요합니다.');
+    }
+    if (!safePersona) {
+        throw new Error('페르소나 내용이 비어 있습니다.');
+    }
+
+    const agents = getAgents();
+    const index = agents.findIndex((agent) => agent.id === agentId);
+    if (index < 0) {
+        throw new Error('에이전트를 찾을 수 없습니다.');
+    }
+
+    const updated = { ...agents[index], persona: safePersona };
+    agents[index] = updated;
+    store.set('agents', agents);
+    return updated;
+}
+
 module.exports = {
     getAgents,
     getAgent,
@@ -160,4 +181,5 @@ module.exports = {
     clearHistory,
     addAgent,
     deleteAgent,
+    updateAgentPersona,
 };

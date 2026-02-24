@@ -18,6 +18,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     getAgent: (agentId) => ipcRenderer.invoke('get-agent', agentId),
     getChatHistory: (agentId) => ipcRenderer.invoke('get-chat-history', agentId),
     clearHistory: (agentId) => ipcRenderer.invoke('clear-history', agentId),
+    updateAgentPersona: (agentId, persona) =>
+        ipcRenderer.invoke('update-agent-persona', { agentId, persona }),
+    aiImprovePersona: (agentId, instruction) =>
+        ipcRenderer.invoke('ai-improve-persona', { agentId, instruction }),
     saveApiKey: (provider, key) => ipcRenderer.invoke('save-api-key', { provider, key }),
     loadApiKeys: () => ipcRenderer.invoke('load-api-keys'),
     onStreamChunk: (callback) => {
@@ -41,10 +45,34 @@ contextBridge.exposeInMainWorld('electronAPI', {
             }
         });
     },
+    onPersonaStreamChunk: (callback) => {
+        ipcRenderer.on('persona-stream-chunk', (_event, data) => {
+            if (typeof callback === 'function') {
+                callback(data);
+            }
+        });
+    },
+    onPersonaStreamEnd: (callback) => {
+        ipcRenderer.on('persona-stream-end', () => {
+            if (typeof callback === 'function') {
+                callback();
+            }
+        });
+    },
+    onPersonaStreamError: (callback) => {
+        ipcRenderer.on('persona-stream-error', (_event, data) => {
+            if (typeof callback === 'function') {
+                callback(data);
+            }
+        });
+    },
     removeStreamListeners: () => {
         ipcRenderer.removeAllListeners('stream-chunk');
         ipcRenderer.removeAllListeners('stream-end');
         ipcRenderer.removeAllListeners('stream-error');
+        ipcRenderer.removeAllListeners('persona-stream-chunk');
+        ipcRenderer.removeAllListeners('persona-stream-end');
+        ipcRenderer.removeAllListeners('persona-stream-error');
     },
     onMeetingSpeakerStart: (callback) => {
         ipcRenderer.on('meeting-speaker-start', (_event, data) => {
