@@ -3,15 +3,52 @@ const Store = require('electron-store');
 
 const store = new Store();
 const defaultAgents = require(path.join(__dirname, '..', 'config', 'default-agents.json'));
+const DEFAULT_PROTECTED_AGENT_ID = 'agent-1';
+
+function cloneAgent(agent) {
+    return { ...agent };
+}
+
+function seedDefaultAgents() {
+    const seeded = defaultAgents.map(cloneAgent);
+    store.set('agents', seeded);
+    return seeded;
+}
+
+function mergeWithDefaults(storedAgents) {
+    const byId = new Map();
+    storedAgents.forEach((agent) => {
+        if (agent && typeof agent.id === 'string') {
+            byId.set(agent.id, { ...agent });
+        }
+    });
+
+    const merged = [];
+    defaultAgents.forEach((agent) => {
+        const current = byId.get(agent.id);
+        merged.push(current ? { ...agent, ...current } : cloneAgent(agent));
+        byId.delete(agent.id);
+    });
+
+    byId.forEach((agent) => {
+        merged.push({ ...agent });
+    });
+
+    return merged;
+}
 
 function getAgents() {
-    const agents = store.get('agents', defaultAgents);
-    if (Array.isArray(agents)) {
-        return agents;
+    const agents = store.get('agents');
+    if (!Array.isArray(agents)) {
+        return seedDefaultAgents();
     }
 
-    store.set('agents', defaultAgents);
-    return defaultAgents;
+    const merged = mergeWithDefaults(agents);
+    if (merged.length !== agents.length || JSON.stringify(merged) !== JSON.stringify(agents)) {
+        store.set('agents', merged);
+    }
+
+    return merged;
 }
 
 function getAgent(agentId) {
@@ -54,10 +91,73 @@ function clearHistory(agentId) {
     store.set(getChatHistoryKey(agentId), []);
 }
 
+function validateAgentPayload(agentData = {}) {
+    const trimmed = {
+        name: typeof agentData.name === 'string' ? agentData.name.trim() : '',
+        emoji: typeof agentData.emoji === 'string' ? agentData.emoji.trim() : '🤖',
+        provider: typeof agentData.provider === 'string' ? agentData.provider.trim().toLowerCase() : '',
+        model: typeof agentData.model === 'string' ? agentData.model.trim() : '',
+        persona: typeof agentData.persona === 'string' ? agentData.persona.trim() : '',
+        expertise: typeof agentData.expertise === 'string' ? agentData.expertise.trim() : '',
+    };
+
+    if (!trimmed.name) {
+        throw new Error('에이전트 이름을 입력해주세요.');
+    }
+    if (!trimmed.provider) {
+        throw new Error('AI 제공자를 선택해주세요.');
+    }
+    if (!trimmed.model) {
+        throw new Error('모델명을 입력해주세요.');
+    }
+
+    return trimmed;
+}
+
+function addAgent(agentData) {
+    const validated = validateAgentPayload(agentData);
+    const agents = getAgents();
+    const created = {
+        id: `agent-${Date.now()}`,
+        name: validated.name,
+        emoji: validated.emoji || '🤖',
+        provider: validated.provider,
+        model: validated.model,
+        persona: validated.persona || `${validated.name} 에이전트입니다.`,
+        expertise: validated.expertise || '일반 업무',
+    };
+
+    agents.push(created);
+    store.set('agents', agents);
+    return created;
+}
+
+function deleteAgent(agentId) {
+    if (!agentId) {
+        throw new Error('삭제할 에이전트 ID가 필요합니다.');
+    }
+    if (agentId === DEFAULT_PROTECTED_AGENT_ID) {
+        throw new Error('오케스트레이터(agent-1)는 삭제할 수 없습니다.');
+    }
+
+    const agents = getAgents();
+    const exists = agents.some((agent) => agent.id === agentId);
+    if (!exists) {
+        throw new Error('삭제할 에이전트를 찾을 수 없습니다.');
+    }
+
+    const nextAgents = agents.filter((agent) => agent.id !== agentId);
+    store.set('agents', nextAgents);
+    store.delete(getChatHistoryKey(agentId));
+    return nextAgents;
+}
+
 module.exports = {
     getAgents,
     getAgent,
     getChatHistory,
     appendMessage,
     clearHistory,
+    addAgent,
+    deleteAgent,
 };

@@ -1,7 +1,7 @@
 const { app, BrowserWindow, ipcMain, screen, Tray, nativeImage } = require('electron');
 const path = require('path');
 const Store = require('electron-store');
-const { createDashboardWindow, createSettingsWindow, createMeetingWindow } = require('./main/window-manager');
+const { createDashboardWindow, createSettingsWindow, createMeetingWindow, createAddAgentWindow } = require('./main/window-manager');
 const agentStore = require('./main/agent-store');
 const apiManager = require('./main/api-manager');
 const meetingEngine = require('./main/meeting-engine');
@@ -11,6 +11,31 @@ let tray;
 let meetingSessionId = 0;
 let meetingSender = null;
 let isMeetingLoopRunning = false;
+
+function getWidgetBounds() {
+    const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
+    const agents = agentStore.getAgents();
+    const width = Math.max(400, agents.length * 96 + 120);
+    const height = 140;
+    const x = Math.max(0, Math.floor((screenWidth - width) / 2));
+    const y = screenHeight - height - 20;
+    return { width, height, x, y };
+}
+
+function syncWidgetBounds() {
+    if (!widgetWindow || widgetWindow.isDestroyed()) {
+        return;
+    }
+    const { width, height, x, y } = getWidgetBounds();
+    widgetWindow.setBounds({ width, height, x, y });
+}
+
+function broadcastAgentsUpdated() {
+    const agents = agentStore.getAgents();
+    if (widgetWindow && !widgetWindow.isDestroyed()) {
+        widgetWindow.webContents.send('agents-updated', { agents });
+    }
+}
 
 function createTrayIcon() {
     if (tray) {
@@ -33,16 +58,11 @@ function createTrayIcon() {
     return tray;
 }
 function createWidgetWindow() {
-    const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
-    const agents = agentStore.getAgents();
-    const widgetWidth = Math.max(400, agents.length * 96 + 120);
-    const windowHeight = 140;
-    const xPosition = Math.max(0, Math.floor((screenWidth - widgetWidth) / 2));
-    const yPosition = screenHeight - windowHeight - 20;
+    const bounds = getWidgetBounds();
 
     widgetWindow = new BrowserWindow({
-        width: widgetWidth,
-        height: windowHeight,
+        width: bounds.width,
+        height: bounds.height,
         show: false,
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
@@ -53,8 +73,8 @@ function createWidgetWindow() {
         transparent: true,
         alwaysOnTop: true,
         resizable: false,
-        x: xPosition,
-        y: yPosition,
+        x: bounds.x,
+        y: bounds.y,
     });
     // Keep widget visible on all workspaces (macOS)
     widgetWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
@@ -151,6 +171,26 @@ app.on('window-all-closed', () => {
 ipcMain.handle('get-agents', async () => {
     return agentStore.getAgents();
 });
+ipcMain.handle('add-agent', async (_event, agentData) => {
+    try {
+        const created = agentStore.addAgent(agentData);
+        syncWidgetBounds();
+        broadcastAgentsUpdated();
+        return { ok: true, agent: created };
+    } catch (error) {
+        return { ok: false, error: error.message || '에이전트 추가에 실패했습니다.' };
+    }
+});
+ipcMain.handle('delete-agent', async (_event, agentId) => {
+    try {
+        agentStore.deleteAgent(agentId);
+        syncWidgetBounds();
+        broadcastAgentsUpdated();
+        return { ok: true };
+    } catch (error) {
+        return { ok: false, error: error.message || '에이전트 삭제에 실패했습니다.' };
+    }
+});
 ipcMain.on('open-dashboard', (event, agentId) => {
     try {
         if (!agentStore.getAgent(agentId)) {
@@ -213,6 +253,9 @@ ipcMain.handle('load-api-keys', async () => {
 });
 ipcMain.on('open-settings', () => {
     createSettingsWindow();
+});
+ipcMain.on('open-add-agent', () => {
+    createAddAgentWindow();
 });
 ipcMain.on('open-meeting', () => {
     createMeetingWindow();

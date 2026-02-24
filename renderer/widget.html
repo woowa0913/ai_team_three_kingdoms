@@ -15,6 +15,7 @@
       <div class="loading">Agents Loading...</div>
     </div>
     <div class="actions">
+      <button id="btn-add-agent" class="icon-button btn-add-agent" title="에이전트 추가">＋</button>
       <button id="btn-meeting" class="icon-button btn-meeting" title="작전 회의실">👥</button>
       <button id="btn-settings" class="icon-button btn-settings" title="설정">⚙️</button>
       <button id="btn-hide-widget" class="icon-button btn-hide-widget" title="위젯 숨기기 (트레이에서 다시 표시)">⊟</button>
@@ -23,92 +24,131 @@
   </div>
 
   <script>
-    // Refined render logic based on the new transparent app-icon design 
-    document.addEventListener('DOMContentLoaded', async () => {
+    function createDeleteButton(agent) {
+      if (agent.id === 'agent-1') {
+        return null;
+      }
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'delete-btn';
+      button.title = `${agent.name} 삭제`;
+      button.textContent = '×';
+      button.addEventListener('click', async (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        const confirmed = window.confirm(`${agent.name} 에이전트를 삭제할까요?`);
+        if (!confirmed) {
+          return;
+        }
+        try {
+          const result = await window.electronAPI.deleteAgent(agent.id);
+          if (!result?.ok) {
+            throw new Error(result?.error || '삭제 실패');
+          }
+          await renderAgents();
+        } catch (error) {
+          console.error('에이전트 삭제 실패:', error);
+          window.alert(error.message || '에이전트 삭제에 실패했습니다.');
+        }
+      });
+      return button;
+    }
+
+    function buildAgentItem(agent) {
+      const agentWrapper = document.createElement('div');
+      agentWrapper.className = 'agent-item';
+
+      const agentIcon = document.createElement('div');
+      agentIcon.className = 'agent-icon';
+      agentIcon.title = agent.name;
+
+      const emojiSpan = document.createElement('span');
+      emojiSpan.className = 'emoji';
+      emojiSpan.textContent = agent.emoji || '🤖';
+
+      const badgeSpan = document.createElement('div');
+      badgeSpan.className = 'status-badge';
+      badgeSpan.textContent = '⚫ 대기 중';
+
+      const deleteBtn = createDeleteButton(agent);
+      if (deleteBtn) {
+        agentIcon.appendChild(deleteBtn);
+      }
+      agentIcon.appendChild(emojiSpan);
+      agentIcon.appendChild(badgeSpan);
+
+      const agentInfo = document.createElement('div');
+      agentInfo.className = 'agent-info';
+
+      const nameDiv = document.createElement('div');
+      nameDiv.className = 'agent-name';
+      nameDiv.textContent = agent.name;
+
+      const roleDiv = document.createElement('div');
+      roleDiv.className = 'agent-role';
+      roleDiv.textContent = agent.expertise ? agent.expertise.split(',')[0].trim() : '에이전트';
+
+      agentInfo.appendChild(nameDiv);
+      agentInfo.appendChild(roleDiv);
+      agentWrapper.appendChild(agentIcon);
+      agentWrapper.appendChild(agentInfo);
+
+      agentWrapper.addEventListener('click', () => {
+        badgeSpan.textContent = '🟢 업무 중';
+        badgeSpan.classList.add('active');
+        window.electronAPI.openDashboard(agent.id);
+      });
+
+      return agentWrapper;
+    }
+
+    async function renderAgents() {
+      const agentListEl = document.getElementById('agent-list');
+      if (!agentListEl) {
+        return;
+      }
       try {
         const agents = await window.electronAPI.getAgents();
-        const agentListEl = document.getElementById('agent-list');
-        agentListEl.innerHTML = ''; // Clear loading
-
-        agents.forEach(agent => {
-          // 1. 전체 컨테이너
-          const agentWrapper = document.createElement('div');
-          agentWrapper.className = 'agent-item';
-
-          // 2. 앱 아이콘 영역 (박스)
-          const agentIcon = document.createElement('div');
-          agentIcon.className = 'agent-icon';
-          agentIcon.title = agent.name;
-
-          const emojiSpan = document.createElement('span');
-          emojiSpan.className = 'emoji';
-          emojiSpan.textContent = agent.emoji || '🤖';
-
-          const badgeSpan = document.createElement('div');
-          badgeSpan.className = 'status-badge';
-          badgeSpan.textContent = '⚫ 대기 중'; // 기본 상태
-
-          agentIcon.appendChild(emojiSpan);
-          agentIcon.appendChild(badgeSpan);
-
-          // 3. 텍스트 정보 영역 (이름, 역할)
-          const agentInfo = document.createElement('div');
-          agentInfo.className = 'agent-info';
-
-          const nameDiv = document.createElement('div');
-          nameDiv.className = 'agent-name';
-          nameDiv.textContent = agent.name;
-
-          const roleDiv = document.createElement('div');
-          roleDiv.className = 'agent-role';
-          roleDiv.textContent = agent.expertise ? agent.expertise.split(',')[0] : '에이전트';
-
-          agentInfo.appendChild(nameDiv);
-          agentInfo.appendChild(roleDiv);
-
-          // 합치기
-          agentWrapper.appendChild(agentIcon);
-          agentWrapper.appendChild(agentInfo);
-
-          // 클릭 이벤트 (대시보드 열기)
-          agentWrapper.addEventListener('click', () => {
-            // 클릭하면 활성 상태로 뱃지 모양 변경 스크립트 등 나중에 추가 가능
-            badgeSpan.textContent = '🟢 업무 중';
-            badgeSpan.classList.add('active');
-            window.electronAPI.openDashboard(agent.id);
-          });
-
-          agentListEl.appendChild(agentWrapper);
+        agentListEl.innerHTML = '';
+        agents.forEach((agent) => {
+          agentListEl.appendChild(buildAgentItem(agent));
         });
-
       } catch (error) {
         console.error('Failed to load agents:', error);
-        document.getElementById('agent-list').innerHTML = '<div class="error">Load Error</div>';
+        agentListEl.innerHTML = '<div class="error">Load Error</div>';
       }
+    }
 
-      document.getElementById('btn-settings').addEventListener('click', () => {
-        if (window.electronAPI && window.electronAPI.openSettings) {
-          window.electronAPI.openSettings();
-        }
+    function bindActions() {
+      document.getElementById('btn-add-agent')?.addEventListener('click', () => {
+        window.electronAPI.openAddAgent?.();
       });
 
-      document.getElementById('btn-hide-widget').addEventListener('click', () => {
-        if (window.electronAPI && window.electronAPI.hideWidget) {
-          window.electronAPI.hideWidget();
-        }
+      document.getElementById('btn-settings')?.addEventListener('click', () => {
+        window.electronAPI.openSettings?.();
       });
 
-      document.getElementById('btn-meeting').addEventListener('click', () => {
-        if (window.electronAPI && window.electronAPI.openMeetingRoom) {
-          window.electronAPI.openMeetingRoom();
-        }
+      document.getElementById('btn-hide-widget')?.addEventListener('click', () => {
+        window.electronAPI.hideWidget?.();
       });
 
-      document.getElementById('btn-quit').addEventListener('click', () => {
-        if (window.electronAPI && window.electronAPI.quitApp) {
-          window.electronAPI.quitApp();
-        }
+      document.getElementById('btn-meeting')?.addEventListener('click', () => {
+        window.electronAPI.openMeetingRoom?.();
       });
+
+      document.getElementById('btn-quit')?.addEventListener('click', () => {
+        window.electronAPI.quitApp?.();
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      bindActions();
+      await renderAgents();
+      if (window.electronAPI?.onAgentsUpdated) {
+        window.electronAPI.onAgentsUpdated(() => {
+          renderAgents();
+        });
+      }
     });
   </script>
 </body>

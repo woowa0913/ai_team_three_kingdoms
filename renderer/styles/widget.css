@@ -53,6 +53,7 @@ body {
   gap: 8px;
   cursor: pointer;
   transition: transform 0.2s ease;
+  position: relative;
 }
 
 .agent-item:hover {
@@ -80,11 +81,41 @@ body {
   align-items: center;
   position: relative;
   transition: all 0.2s ease;
+  overflow: visible;
 }
 
 .agent-icon .emoji {
   font-size: 38px;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.delete-btn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 20px;
+  height: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  font-size: 14px;
+  line-height: 1;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  -webkit-app-region: no-drag;
+}
+
+.agent-item:hover .delete-btn {
+  display: flex;
+}
+
+.delete-btn:hover {
+  background: #8B1A1A;
+  border-color: #C9A84C;
 }
 
 /* 하단 겹치는 상태 뱃지 */
@@ -172,6 +203,11 @@ body {
 .btn-hide-widget {
   border-color: rgba(201, 168, 76, 0.5);
   color: var(--accent-gold);
+}
+
+.btn-add-agent {
+  border-color: rgba(32, 201, 151, 0.5);
+  color: #20c997;
 }
 
 /* Utilities */

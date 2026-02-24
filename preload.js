@@ -2,7 +2,10 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
     getAgents: () => ipcRenderer.invoke('get-agents'),
+    addAgent: (data) => ipcRenderer.invoke('add-agent', data),
+    deleteAgent: (agentId) => ipcRenderer.invoke('delete-agent', agentId),
     openDashboard: (agentId) => ipcRenderer.send('open-dashboard', agentId),
+    openAddAgent: () => ipcRenderer.send('open-add-agent'),
     openMeetingRoom: () => ipcRenderer.send('open-meeting'),
     openSettings: () => ipcRenderer.send('open-settings'),
     hideWidget: () => ipcRenderer.send('hide-widget'),
@@ -71,8 +74,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
             }
         });
     },
+    onAgentsUpdated: (callback) => {
+        ipcRenderer.on('agents-updated', (_event, payload) => {
+            if (typeof callback === 'function') {
+                callback(payload);
+            }
+        });
+    },
     removeMeetingListeners: () => {
-        ['meeting-speaker-start', 'meeting-chunk', 'meeting-speaker-end', 'meeting-ended'].forEach((channel) => {
+        ['meeting-speaker-start', 'meeting-chunk', 'meeting-speaker-end', 'meeting-ended', 'agents-updated'].forEach((channel) => {
             ipcRenderer.removeAllListeners(channel);
         });
     },

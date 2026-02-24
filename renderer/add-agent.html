@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>새 에이전트 추가</title>
+    <link rel="stylesheet" href="styles/add-agent.css">
+</head>
+
+<body>
+    <div class="add-agent-modal">
+        <header class="modal-header">
+            <h1>새 에이전트 추가</h1>
+            <button type="button" class="btn-close" id="btn-close" aria-label="닫기">✕</button>
+        </header>
+
+        <main class="modal-body">
+            <label class="field">
+                <span>이름</span>
+                <input id="agent-name" type="text" placeholder="예: 조운" maxlength="30">
+            </label>
+
+            <label class="field field-inline">
+                <span>이모지</span>
+                <input id="agent-emoji" type="text" value="🤖" maxlength="2">
+            </label>
+
+            <label class="field">
+                <span>AI 제공자</span>
+                <select id="agent-provider">
+                    <option value="anthropic">anthropic</option>
+                    <option value="openai">openai</option>
+                    <option value="google">google</option>
+                    <option value="ollama">ollama</option>
+                </select>
+            </label>
+
+            <label class="field">
+                <span>모델</span>
+                <input id="agent-model" type="text" placeholder="예: claude-3-7-sonnet-20250219">
+            </label>
+
+            <label class="field">
+                <span>페르소나</span>
+                <textarea id="agent-persona" rows="4" placeholder="이 에이전트의 역할/말투/원칙을 입력하세요"></textarea>
+            </label>
+
+            <label class="field">
+                <span>전문분야</span>
+                <input id="agent-expertise" type="text" placeholder="예: 백엔드, 최적화">
+            </label>
+        </main>
+
+        <footer class="modal-footer">
+            <button type="button" class="btn-cancel" id="btn-cancel">취소</button>
+            <button type="button" class="btn-submit" id="btn-submit">추가하기</button>
+        </footer>
+    </div>
+
+    <script src="js/add-agent.js"></script>
+</body>
+
+</html>

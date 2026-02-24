@@ -5,6 +5,7 @@ const { BrowserWindow } = require('electron');
 const dashboardWindows = new Map();
 let settingsWindow = null;
 let meetingWindow = null;
+let addAgentWindow = null;
 
 function createDashboardWindow(agentId) {
     if (!agentId || typeof agentId !== 'string') {
@@ -171,8 +172,61 @@ function createMeetingWindow() {
     return meetingWindow;
 }
 
+function createAddAgentWindow() {
+    if (addAgentWindow && !addAgentWindow.isDestroyed()) {
+        addAgentWindow.focus();
+        return addAgentWindow;
+    }
+
+    addAgentWindow = new BrowserWindow({
+        width: 400,
+        height: 480,
+        show: false,
+        frame: true,
+        resizable: false,
+        modal: false,
+        webPreferences: {
+            preload: path.join(__dirname, '..', 'preload.js'),
+            contextIsolation: true,
+            nodeIntegration: false,
+        },
+    });
+
+    addAgentWindow.once('ready-to-show', () => {
+        if (!addAgentWindow.isDestroyed()) {
+            addAgentWindow.show();
+        }
+    });
+
+    addAgentWindow.on('closed', () => {
+        addAgentWindow = null;
+    });
+
+    const addAgentPath = path.join(__dirname, '..', 'renderer', 'add-agent.html');
+    if (fs.existsSync(addAgentPath)) {
+        addAgentWindow.loadFile(addAgentPath).catch((error) => {
+            console.error('에이전트 추가창 로드 실패:', error);
+        });
+    } else {
+        const fallbackHtml = [
+            '<!doctype html>',
+            '<html lang="ko"><head><meta charset="UTF-8"><title>에이전트 추가 준비 중</title></head>',
+            '<body style="font-family: sans-serif; background: #1d1d1d; color: #ececec; padding: 24px;">',
+            '<h2>에이전트 추가 화면 준비 중</h2>',
+            '<p>renderer/add-agent.html 파일이 아직 없습니다.</p>',
+            '</body></html>',
+        ].join('');
+        addAgentWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(fallbackHtml)}`).catch((error) => {
+            console.error('에이전트 추가창 대체 페이지 로드 실패:', error);
+        });
+    }
+
+    return addAgentWindow;
+}
+
 module.exports = {
     createDashboardWindow,
     createSettingsWindow,
     createMeetingWindow,
+    createAddAgentWindow,
 };
