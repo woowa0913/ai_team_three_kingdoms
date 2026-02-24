@@ -1,33 +1,13 @@
-:root {
-    /* 위젯 공통 속성 유지 확장 */
-    --bg-color: rgba(30, 30, 30, 0.85);
-    --border-color: rgba(255, 255, 255, 0.1);
-    --text-color: #ECECEC;
-    --hover-bg: rgba(255, 255, 255, 0.1);
+/* AI Orchestra — Dashboard
+   색상 변수는 themes.css 에서 관리. */
 
-    /* 대시보드 (삼국지 전장의 장막 테마) 확장 토큰 */
-    --bg-overlay: rgba(20, 18, 18, 0.95);
-    --text-muted: #8E8E93;
-    --accent-gold: #C9A84C;
-    --accent-crimson: #8B1A1A;
-
-    --message-user-bg: rgba(139, 26, 26, 0.65);
-    --message-ai-bg: rgba(45, 45, 45, 0.85);
-
-    --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    --border-radius-base: 12px;
-    --border-radius-bubble: 16px;
-}
-
-body,
-html {
+body, html {
     margin: 0;
     padding: 0;
     width: 100%;
     height: 100%;
-    font-family: var(--font-family);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     background-color: transparent;
-    /* Electron 투명 창 지원을 위함 */
     color: var(--text-color);
     overflow: hidden;
 }
@@ -40,20 +20,18 @@ html {
     background-color: var(--bg-overlay);
     border: 1px solid var(--accent-gold);
     box-sizing: border-box;
-    /* Electron 창 자체 설정에 따라 깎이므로 선택적 적용 */
     position: relative;
 }
 
-/* 1. Header 영역 */
+/* ─── 1. 헤더 ─── */
 .header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 16px 20px;
-    background-color: rgba(0, 0, 0, 0.4);
+    background-color: var(--bg-secondary);
     border-bottom: 1px solid var(--accent-gold);
     -webkit-app-region: drag;
-    /* Electron 드래그 영역 설정 */
 }
 
 .header-info {
@@ -64,15 +42,16 @@ html {
 
 .agent-emoji {
     font-size: 28px;
-    background: var(--hover-bg);
+    background: var(--bg-hover);
     padding: 8px;
     border-radius: 50%;
-    border: 1px solid rgba(201, 168, 76, 0.3);
+    border: 1px solid var(--accent-gold-border);
 }
 
 .agent-name-wrap {
     display: flex;
     flex-direction: column;
+    position: relative;
 }
 
 .agent-name {
@@ -80,6 +59,87 @@ html {
     font-weight: 600;
     color: var(--accent-gold);
     margin-bottom: 2px;
+}
+
+/* 에이전트 전환 드롭다운 트리거 */
+.agent-switcher {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-agent-switch {
+    width: 24px;
+    height: 24px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--bg-input);
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 11px;
+    line-height: 1;
+    padding: 0;
+    transition: all 0.2s ease;
+    -webkit-app-region: no-drag;
+}
+
+.btn-agent-switch:hover,
+.btn-agent-switch.open {
+    color: var(--text-color);
+    border-color: var(--accent-gold-border);
+    background: var(--accent-gold-dim);
+}
+
+/* 에이전트 전환 드롭다운 목록 */
+.agent-switcher-dropdown {
+    list-style: none;
+    margin: 6px 0 0;
+    padding: 6px;
+    width: 220px;
+    border-radius: 10px;
+    border: 1px solid var(--dropdown-border);
+    background: var(--dropdown-bg);
+    position: absolute;
+    top: 42px;
+    left: 0;
+    z-index: 30;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+}
+
+.agent-switcher-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    color: var(--text-color);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.12s;
+}
+
+.agent-switcher-item:hover {
+    background: var(--dropdown-hover);
+}
+
+.agent-switcher-item.current {
+    color: var(--accent-gold);
+    background: var(--accent-gold-dim);
+}
+
+.agent-switcher-item.disabled {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.agent-switcher-label {
+    white-space: nowrap;
+}
+
+.agent-switcher-check {
+    font-weight: 700;
+    color: var(--accent-gold);
 }
 
 .model-name {
@@ -105,194 +165,27 @@ html {
 }
 
 .icon-btn:hover {
-    background: var(--hover-bg);
+    background: var(--bg-hover);
     color: var(--text-color);
 }
 
-/* 2. Chat Messages 영역 */
-.chat-messages {
-    flex: 1;
-    padding: 20px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-/* 스크롤바 커스텀 */
-.chat-messages::-webkit-scrollbar {
-    width: 6px;
-}
-
-.chat-messages::-webkit-scrollbar-thumb {
-    background-color: rgba(201, 168, 76, 0.3);
-    border-radius: 10px;
-}
-
-/* 메시지 공통 */
-.message {
-    display: flex;
-    flex-direction: column;
-    max-width: 80%;
-    animation: fadeIn 0.3s ease-out;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.message-content {
-    padding: 12px 16px;
-    font-size: 14px;
-    line-height: 1.5;
-    word-break: break-word;
-}
-
-.message-timestamp {
-    font-size: 11px;
-    color: var(--text-muted);
-    margin-top: 6px;
-}
-
-/* 유저 메시지 */
-.message.user {
-    align-self: flex-end;
-}
-
-.message.user .message-content {
-    background-color: var(--message-user-bg);
-    border: 1px solid var(--accent-crimson);
-    border-radius: var(--border-radius-bubble) var(--border-radius-bubble) 4px var(--border-radius-bubble);
-    color: #fff;
-}
-
-.message.user .message-timestamp {
-    text-align: right;
-}
-
-/* AI(Assistant) 메시지 */
-.message.assistant {
-    align-self: flex-start;
-}
-
-.message.assistant .message-content {
-    background-color: var(--message-ai-bg);
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-bubble) var(--border-radius-bubble) var(--border-radius-bubble) 4px;
-}
-
-/* 스트리밍 효과 */
-.message.streaming .message-content::after {
-    content: "▌";
-    display: inline-block;
-    vertical-align: bottom;
-    margin-left: 4px;
-    color: var(--accent-gold);
-    animation: blink 1s step-end infinite;
-}
-
-@keyframes blink {
-
-    0%,
-    100% {
-        opacity: 1;
-    }
-
-    50% {
-        opacity: 0;
-    }
-}
-
-/* 3. Input 영역 */
-.input-container {
-    padding: 16px 20px;
-    background-color: rgba(0, 0, 0, 0.4);
-    border-top: 1px solid var(--border-color);
-    display: flex;
-    gap: 12px;
-    align-items: flex-end;
-}
-
-.message-input {
-    flex: 1;
-    background-color: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
-    color: var(--text-color);
-    border-radius: var(--border-radius-base);
-    padding: 12px 16px;
-    font-size: 14px;
-    resize: none;
-    min-height: 20px;
-    max-height: 120px;
-    font-family: inherit;
-    transition: border-color 0.2s;
-}
-
-.message-input:focus {
-    outline: none;
-    border-color: var(--accent-gold);
-}
-
-.message-input::placeholder {
-    color: var(--text-muted);
-}
-
-.btn-send {
-    background-color: var(--accent-crimson);
-    color: #fff;
-    border: none;
-    border-radius: var(--border-radius-base);
-    width: 44px;
-    height: 44px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.btn-send:hover:not(:disabled) {
-    background-color: #a02020;
-    box-shadow: 0 0 10px rgba(139, 26, 26, 0.5);
-}
-
-.btn-send:disabled {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: var(--text-muted);
-    cursor: not-allowed;
-}
-
-.btn-send svg {
-    width: 18px;
-    height: 18px;
-    fill: currentColor;
-}
-
-/* API Key Warning */
+/* ─── 2. API 키 경고 배너 ─── */
 .api-key-warning {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: rgba(139, 26, 26, 0.15);
-    border-bottom: 1px solid var(--accent-crimson);
+    background: var(--warning-bg);
+    border-bottom: 1px solid var(--warning-border);
     padding: 10px 20px;
     font-size: 13px;
-    color: #FF6B6B;
+    color: var(--warning-text);
     flex-shrink: 0;
 }
 
 .api-key-warning .btn-open-settings {
     background: transparent;
-    border: 1px solid var(--accent-crimson);
-    color: #FF6B6B;
+    border: 1px solid var(--warning-border);
+    color: var(--warning-text);
     border-radius: 6px;
     padding: 4px 10px;
     font-size: 12px;
@@ -301,10 +194,10 @@ html {
 }
 
 .api-key-warning .btn-open-settings:hover {
-    background: rgba(139, 26, 26, 0.3);
+    background: var(--accent-crimson-dim);
 }
 
-/* Tab Bar */
+/* ─── 3. 탭 바 ─── */
 .tab-bar {
     display: flex;
     gap: 4px;
@@ -328,7 +221,7 @@ html {
 
 .tab-btn:hover {
     color: var(--text-color);
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--bg-input);
 }
 
 .tab-btn.active {
@@ -347,12 +240,171 @@ html {
     display: flex;
 }
 
-.persona-view {
-    padding: 24px;
+/* ─── 4. 채팅 메시지 ─── */
+.chat-messages {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: 16px;
+}
+
+.chat-messages::-webkit-scrollbar {
+    width: 6px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+    background-color: var(--scrollbar-thumb);
+    border-radius: 10px;
+}
+
+.message {
+    display: flex;
+    flex-direction: column;
+    max-width: 80%;
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.message-content {
+    padding: 12px 16px;
+    font-size: 14px;
+    line-height: 1.5;
+    word-break: break-word;
+}
+
+.message-timestamp {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 6px;
+}
+
+.message.user {
+    align-self: flex-end;
+}
+
+.message.user .message-content {
+    background-color: var(--message-user-bg);
+    border: 1px solid var(--accent-crimson);
+    border-radius: 16px 16px 4px 16px;
+    color: var(--text-color);
+}
+
+.message.user .message-timestamp {
+    text-align: right;
+}
+
+.message.assistant {
+    align-self: flex-start;
+}
+
+.message.assistant .message-content {
+    background-color: var(--message-ai-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px 16px 16px 4px;
+}
+
+/* 스트리밍 커서 */
+.message.streaming .message-content::after {
+    content: "▌";
+    display: inline-block;
+    vertical-align: bottom;
+    margin-left: 4px;
+    color: var(--accent-gold);
+    animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0; }
+}
+
+/* ─── 5. 입력 영역 ─── */
+.input-container {
+    padding: 16px 20px;
+    background-color: var(--bg-secondary);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+}
+
+.message-input {
+    flex: 1;
+    background-color: var(--bg-input);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 14px;
+    resize: none;
+    min-height: 20px;
+    max-height: 120px;
+    font-family: inherit;
+    transition: border-color 0.2s;
+}
+
+.message-input:focus {
+    outline: none;
+    border-color: var(--accent-gold);
+}
+
+.message-input::placeholder {
+    color: var(--text-muted);
+}
+
+.btn-send {
+    background-color: var(--accent-crimson);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-send:hover:not(:disabled) {
+    background-color: var(--accent-crimson-hover);
+    box-shadow: 0 0 10px var(--accent-crimson-glow);
+}
+
+.btn-send:disabled {
+    background-color: var(--bg-hover);
+    color: var(--text-muted);
+    cursor: not-allowed;
+}
+
+.btn-send svg {
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
+}
+
+/* ─── 6. 페르소나 탭 ─── */
+.persona-view {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
     overflow-y: auto;
+    flex: 1;
+}
+
+/* 페르소나 헤더 (이름 + 편집 버튼) */
+.persona-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
 }
 
 .persona-name {
@@ -361,15 +413,267 @@ html {
     color: var(--accent-gold);
 }
 
+.btn-edit-persona {
+    background: var(--accent-gold-dim);
+    border: 1px solid var(--accent-gold-border);
+    color: var(--accent-gold);
+    border-radius: 8px;
+    padding: 5px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+}
+
+.btn-edit-persona:hover {
+    background: var(--accent-gold-border);
+}
+
+/* 읽기 모드 */
+.persona-readonly {
+    flex: 1;
+}
+
 .persona-desc {
     font-size: 14px;
     line-height: 1.7;
     color: var(--text-muted);
     white-space: pre-wrap;
+    margin: 0;
 }
 
+/* 편집 모드 */
+.persona-edit {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+}
+
+.persona-textarea {
+    flex: 1;
+    min-height: 140px;
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 14px;
+    line-height: 1.6;
+    font-family: inherit;
+    resize: none;
+    transition: border-color 0.2s;
+}
+
+.persona-textarea:focus {
+    outline: none;
+    border-color: var(--accent-gold);
+}
+
+/* 편집 액션 버튼 행 */
+.persona-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.btn-ai-help {
+    background: var(--accent-gold-dim);
+    border: 1px solid var(--accent-gold-border);
+    color: var(--accent-gold);
+    border-radius: 8px;
+    padding: 7px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+    flex: 1;
+    min-width: 120px;
+}
+
+.btn-ai-help:hover {
+    background: var(--accent-gold-border);
+}
+
+.btn-save-persona {
+    background: var(--accent-crimson);
+    border: none;
+    color: #fff;
+    border-radius: 8px;
+    padding: 7px 18px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.btn-save-persona:hover {
+    background: var(--accent-crimson-hover);
+}
+
+.btn-cancel-persona {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    border-radius: 8px;
+    padding: 7px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.btn-cancel-persona:hover {
+    color: var(--text-color);
+    border-color: var(--text-muted);
+}
+
+/* AI 도움 패널 (슬라이드업 영역) */
+.ai-help-panel {
+    background: var(--ai-panel-bg);
+    border: 1px solid var(--ai-panel-border);
+    border-radius: 12px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    animation: slideUp 0.25s ease-out;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.ai-help-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent-gold);
+    letter-spacing: 0.5px;
+}
+
+.ai-help-input-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.ai-help-input {
+    flex: 1;
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-family: inherit;
+    transition: border-color 0.2s;
+}
+
+.ai-help-input:focus {
+    outline: none;
+    border-color: var(--accent-gold);
+}
+
+.ai-help-input::placeholder {
+    color: var(--text-muted);
+}
+
+.btn-ai-send {
+    background: var(--accent-crimson);
+    border: none;
+    color: #fff;
+    border-radius: 8px;
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.15s;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-ai-send:hover:not(:disabled) {
+    background: var(--accent-crimson-hover);
+}
+
+.btn-ai-send:disabled {
+    background: var(--bg-hover);
+    color: var(--text-muted);
+    cursor: not-allowed;
+}
+
+/* 제갈량 응답 스트리밍 영역 */
+.ai-help-response {
+    min-height: 60px;
+    max-height: 140px;
+    overflow-y: auto;
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text-muted);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.ai-help-response::-webkit-scrollbar {
+    width: 4px;
+}
+
+.ai-help-response::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 4px;
+}
+
+/* AI 응답 패널 하단 버튼 */
+.ai-help-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.btn-apply-suggestion {
+    background: var(--accent-gold-dim);
+    border: 1px solid var(--accent-gold-border);
+    color: var(--accent-gold);
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.btn-apply-suggestion:hover:not(:disabled) {
+    background: var(--accent-gold-border);
+}
+
+.btn-apply-suggestion:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.btn-close-ai-help {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.btn-close-ai-help:hover {
+    color: var(--text-color);
+    border-color: var(--text-muted);
+}
+
+/* ─── 7. 능력/스킬 탭 ─── */
 .skills-view {
-    padding: 24px;
+    padding: 20px;
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
@@ -378,10 +682,32 @@ html {
 }
 
 .skill-tag {
-    background: rgba(201, 168, 76, 0.15);
-    border: 1px solid rgba(201, 168, 76, 0.3);
+    background: var(--accent-gold-dim);
+    border: 1px solid var(--accent-gold-border);
     color: var(--accent-gold);
     font-size: 12px;
     padding: 6px 14px;
     border-radius: 20px;
+}
+
+/* ─── 8. 토스트 (인라인 스타일 대체) ─── */
+.toast {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--toast-bg);
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 8px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    z-index: 1000;
+    font-size: 14px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.toast.visible {
+    opacity: 1;
 }

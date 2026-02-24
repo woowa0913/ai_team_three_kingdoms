@@ -38,8 +38,12 @@
             <div class="header-info">
                 <div class="agent-emoji" data-agent-emoji>🪭</div>
                 <div class="agent-name-wrap">
-                    <div class="agent-name" data-agent-name>로딩 중...</div>
+                    <div class="agent-switcher">
+                        <div class="agent-name" data-agent-name>로딩 중...</div>
+                        <button type="button" class="btn-agent-switch" id="btn-agent-switch" title="에이전트 전환">▼</button>
+                    </div>
                     <div class="model-name" data-agent-model>모델 정보 불러오는 중...</div>
+                    <ul class="agent-switcher-dropdown" id="agent-switcher-dropdown" hidden></ul>
                 </div>
             </div>
             <div class="header-actions">

@@ -1,5 +1,7 @@
 const state = {
     agentId: null,
+    agent: null,
+    agents: [],
     isStreaming: false,
     streamingMessageEl: null,
     streamingContentEl: null,
@@ -119,6 +121,7 @@ async function loadAgentMeta(agentId) {
     if (!agent) {
         throw new Error('에이전트 정보를 찾을 수 없습니다.');
     }
+    state.agent = agent;
     const agentName = ui.agentName();
     const agentEmoji = ui.agentEmoji();
     const agentModel = ui.agentModel();
@@ -156,6 +159,92 @@ async function loadAgentMeta(agentId) {
             if (btn) btn.addEventListener('click', () => window.electronAPI.openSettings());
         }
     }
+}
+
+function closeAgentSwitcherDropdown() {
+    const dropdown = document.getElementById('agent-switcher-dropdown');
+    const switchButton = document.getElementById('btn-agent-switch');
+    if (!dropdown || !switchButton) {
+        return;
+    }
+    dropdown.hidden = true;
+    switchButton.classList.remove('open');
+}
+
+function openAgentSwitcherDropdown() {
+    const dropdown = document.getElementById('agent-switcher-dropdown');
+    const switchButton = document.getElementById('btn-agent-switch');
+    if (!dropdown || !switchButton) {
+        return;
+    }
+    dropdown.hidden = false;
+    switchButton.classList.add('open');
+}
+
+function renderAgentSwitcherItems(currentAgentId) {
+    const dropdown = document.getElementById('agent-switcher-dropdown');
+    if (!dropdown) {
+        return;
+    }
+    dropdown.innerHTML = '';
+
+    state.agents.forEach((agent) => {
+        const item = document.createElement('li');
+        item.className = 'agent-switcher-item';
+        if (agent.id === currentAgentId) {
+            item.classList.add('current');
+        }
+        item.innerHTML = `
+            <span class="agent-switcher-label">${agent.emoji || '🤖'} ${agent.name}</span>
+            <span class="agent-switcher-check">${agent.id === currentAgentId ? '✓' : ''}</span>
+        `;
+        item.addEventListener('click', () => {
+            if (agent.id === currentAgentId) {
+                closeAgentSwitcherDropdown();
+                return;
+            }
+            const next = new URL(window.location.href);
+            next.searchParams.set('agentId', agent.id);
+            window.location.href = next.toString();
+        });
+        dropdown.appendChild(item);
+    });
+}
+
+async function bindAgentSwitcher(currentAgentId) {
+    const switchButton = document.getElementById('btn-agent-switch');
+    const dropdown = document.getElementById('agent-switcher-dropdown');
+    if (!switchButton || !dropdown) {
+        return;
+    }
+
+    try {
+        const agents = await window.electronAPI.getAgents();
+        state.agents = Array.isArray(agents) ? agents : [];
+        renderAgentSwitcherItems(currentAgentId);
+    } catch (error) {
+        console.error('에이전트 목록 로드 실패:', error);
+        state.agents = [];
+        dropdown.innerHTML = '<li class="agent-switcher-item disabled">에이전트 목록을 불러오지 못했습니다.</li>';
+    }
+
+    switchButton.addEventListener('click', (event) => {
+        event.stopPropagation();
+        const nextHidden = !dropdown.hidden;
+        if (nextHidden) {
+            closeAgentSwitcherDropdown();
+        } else {
+            openAgentSwitcherDropdown();
+        }
+    });
+
+    dropdown.addEventListener('click', (event) => {
+        event.stopPropagation();
+    });
+
+    document.addEventListener('click', () => {
+        closeAgentSwitcherDropdown();
+    });
 }
 async function loadChatHistory(agentId) {
     const history = await window.electronAPI.getChatHistory(agentId);
@@ -282,6 +371,7 @@ async function init() {
     try {
         await loadAgentMeta(state.agentId);
         await loadChatHistory(state.agentId);
+        await bindAgentSwitcher(state.agentId);
     } catch (error) {
         showToast(error.message || '초기화에 실패했습니다.');
     }
