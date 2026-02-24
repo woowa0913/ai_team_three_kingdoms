@@ -1,5 +1,19 @@
+const testStatusTimers = new Map();
+
+function getProviderCard(provider) {
+    return document.querySelector(`[data-provider="${provider}"]`);
+}
+
 function getProviderInput(provider) {
     return document.querySelector(`[data-provider="${provider}"] .api-key-input`);
+}
+
+function getTestButton(provider) {
+    return document.querySelector(`[data-provider="${provider}"] .btn-test-api`);
+}
+
+function getStatusBadge(provider) {
+    return document.querySelector(`[data-provider="${provider}"] .test-status`);
 }
 
 function showToast(message) {
@@ -35,6 +49,34 @@ function isMaskedValue(value) {
     }
 
     return /(\*{4,})/.test(value);
+}
+
+function setProviderTestStatus(provider, ok, message) {
+    const badge = getStatusBadge(provider);
+    const card = getProviderCard(provider);
+    if (!badge || !card) {
+        return;
+    }
+
+    const previousTimer = testStatusTimers.get(provider);
+    if (previousTimer) {
+        window.clearTimeout(previousTimer);
+    }
+
+    badge.textContent = ok ? `✅ ${message || '연결 성공'}` : `❌ ${message || '연결 실패'}`;
+    badge.style.marginLeft = '8px';
+    badge.style.fontSize = '12px';
+    badge.style.fontWeight = '700';
+    badge.style.color = ok ? '#22c55e' : '#ef4444';
+
+    card.dataset.testStatus = ok ? 'ok' : 'error';
+    const timerId = window.setTimeout(() => {
+        badge.textContent = '';
+        card.dataset.testStatus = '';
+        testStatusTimers.delete(provider);
+    }, 2000);
+
+    testStatusTimers.set(provider, timerId);
 }
 
 async function loadMaskedApiKeys() {
@@ -78,6 +120,46 @@ async function saveApiKeys() {
     }
 }
 
+async function saveProviderKeyIfNeeded(provider) {
+    const input = getProviderInput(provider);
+    if (!input) {
+        return;
+    }
+
+    const value = input.value.trim();
+    if (!value || isMaskedValue(value)) {
+        return;
+    }
+
+    await window.electronAPI.saveApiKey(provider, value);
+}
+
+async function testProviderConnection(provider) {
+    const button = getTestButton(provider);
+    if (!button || !window.electronAPI?.testApiKey) {
+        return;
+    }
+
+    button.disabled = true;
+    const prevText = button.textContent;
+    button.textContent = '테스트 중...';
+
+    try {
+        await saveProviderKeyIfNeeded(provider);
+        const result = await window.electronAPI.testApiKey(provider);
+        if (!result?.ok) {
+            setProviderTestStatus(provider, false, result?.error || '연결 실패');
+            return;
+        }
+        setProviderTestStatus(provider, true, '연결됨');
+    } catch (error) {
+        setProviderTestStatus(provider, false, error.message || '연결 실패');
+    } finally {
+        button.disabled = false;
+        button.textContent = prevText;
+    }
+}
+
 function bindToggleVisibility() {
     const buttons = document.querySelectorAll('.btn-toggle-visibility');
     buttons.forEach((button) => {
@@ -111,6 +193,18 @@ function bindActions() {
     if (cancelButton) {
         cancelButton.addEventListener('click', () => window.close());
     }
+
+    ['anthropic', 'openai', 'google'].forEach((provider) => {
+        const testButton = getTestButton(provider);
+        if (!testButton) {
+            return;
+        }
+        testButton.addEventListener('click', () => {
+            testProviderConnection(provider).catch((error) => {
+                showToast(error.message || '연결 테스트 실패');
+            });
+        });
+    });
 }
 
 function init() {

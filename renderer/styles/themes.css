@@ -1,224 +1,241 @@
 /* =============================================================
-   AI Orchestra — Theme System
+   AI Orchestra — Theme System (Cute Chibi Tent Theme)
    다크/라이트 테마 CSS 변수 정의.
    html[data-theme] 속성으로 수동 오버라이드,
    @media prefers-color-scheme 으로 시스템 자동 감지.
    ============================================================= */
 
-/* ─── 기본값: 다크 테마 (현재 디자인 유지) ─── */
+/* ─── 기본값: 다크 테마 (부드럽고 둥글둥글한 브라운/골드 치비 테마) ─── */
 :root {
-  --border-radius-base: 12px;
+  --border-radius-base: 24px;
+  --border-radius-lg: 32px;
+  --border-radius-full: 9999px;
 
   /* 배경 */
-  --bg-overlay:       rgba(20, 18, 18, 0.95);
-  --bg-secondary:     rgba(0, 0, 0, 0.40);
-  --bg-tertiary:      rgba(45, 45, 45, 0.85);
-  --bg-input:         rgba(255, 255, 255, 0.05);
-  --bg-hover:         rgba(255, 255, 255, 0.10);
-  --hover-bg:         var(--bg-hover);
-  --bg-icon:          rgba(20, 20, 25, 0.70);
+  --bg-overlay: #221e10;
+  /* background-dark */
+  --bg-secondary: #2a2515;
+  --bg-tertiary: #332d19;
+  --bg-input: rgba(255, 255, 255, 0.05);
+  --bg-hover: rgba(244, 192, 37, 0.15);
+  --hover-bg: var(--bg-hover);
+  --bg-icon: #2a2515;
 
   /* 테두리 */
-  --border-color:     rgba(255, 255, 255, 0.10);
-  --border-icon:      rgba(255, 255, 255, 0.15);
+  --border-color: rgba(244, 192, 37, 0.15);
+  --border-icon: rgba(244, 192, 37, 0.2);
 
   /* 텍스트 */
-  --text-color:       #ECECEC;
-  --text-muted:       #8E8E93;
+  --text-color: #fcfbf8;
+  /* background-light */
+  --text-muted: rgba(252, 251, 248, 0.6);
 
   /* 강조색 */
-  --accent-gold:           #C9A84C;
-  --accent-gold-dim:       rgba(201, 168, 76, 0.15);
-  --accent-gold-border:    rgba(201, 168, 76, 0.30);
-  --accent-crimson:        #8B1A1A;
-  --accent-crimson-hover:  #a02020;
-  --accent-crimson-glow:   rgba(139, 26, 26, 0.50);
-  --accent-crimson-dim:    rgba(139, 26, 26, 0.15);
+  --accent-gold: #f4c025;
+  /* primary */
+  --accent-gold-dim: rgba(244, 192, 37, 0.15);
+  --accent-gold-border: rgba(244, 192, 37, 0.3);
+  --accent-crimson: #ff8aa1;
+  --accent-crimson-hover: #ff9eae;
+  --accent-crimson-glow: rgba(255, 138, 161, 0.4);
+  --accent-crimson-dim: rgba(255, 138, 161, 0.15);
 
   /* 상태 */
-  --status-active:    #20C997;
+  --status-active: #40c9a2;
 
   /* 메시지 버블 */
-  --message-user-bg:  rgba(139, 26, 26, 0.65);
-  --message-ai-bg:    rgba(45, 45, 45, 0.85);
+  --message-user-bg: #f4c025;
+  --message-user-text: #221e10;
+  --message-ai-bg: #2a2515;
+  --message-ai-text: #fcfbf8;
 
   /* 위젯 상태 배지 */
-  --badge-bg:         rgba(60, 60, 70, 0.90);
-  --badge-color:      #b0b0b0;
+  --badge-bg: #332d19;
+  --badge-color: #fcfbf8;
 
   /* 스크롤바 */
-  --scrollbar-thumb:  rgba(201, 168, 76, 0.30);
+  --scrollbar-thumb: rgba(244, 192, 37, 0.4);
 
   /* 드롭다운 */
-  --dropdown-bg:      rgba(25, 22, 22, 0.98);
-  --dropdown-border:  rgba(201, 168, 76, 0.30);
-  --dropdown-hover:   rgba(255, 255, 255, 0.07);
+  --dropdown-bg: #221e10;
+  --dropdown-border: rgba(244, 192, 37, 0.3);
+  --dropdown-hover: rgba(244, 192, 37, 0.15);
 
   /* 경고 배너 */
-  --warning-bg:       rgba(139, 26, 26, 0.15);
-  --warning-text:     #FF6B6B;
-  --warning-border:   #8B1A1A;
+  --warning-bg: rgba(255, 138, 161, 0.1);
+  --warning-text: #ff8aa1;
+  --warning-border: #ff8aa1;
 
   /* 토스트 */
-  --toast-bg:         rgba(139, 26, 26, 0.90);
+  --toast-bg: rgba(255, 138, 161, 0.95);
 
   /* AI 도움 패널 */
-  --ai-panel-bg:      rgba(28, 24, 18, 0.98);
-  --ai-panel-border:  rgba(201, 168, 76, 0.20);
+  --ai-panel-bg: #221e10;
+  --ai-panel-border: rgba(244, 192, 37, 0.3);
 
   /* 설정 카드 */
-  --card-bg:          rgba(30, 28, 25, 0.90);
-  --card-border:      rgba(201, 168, 76, 0.20);
+  --card-bg: #2a2515;
+  --card-border: rgba(244, 192, 37, 0.3);
 }
 
-/* ─── 시스템 자동: 라이트 모드 ─── */
+/* ─── 시스템 자동: 라이트 모드 (귀여운 복숭아/골드/크림 치비 테마) ─── */
 @media (prefers-color-scheme: light) {
   :root {
-    --bg-overlay:       rgba(245, 240, 228, 0.97);
-    --bg-secondary:     rgba(200, 190, 170, 0.50);
-    --bg-tertiary:      rgba(220, 210, 190, 0.85);
-    --bg-input:         rgba(0, 0, 0, 0.05);
-    --bg-hover:         rgba(0, 0, 0, 0.07);
-    --bg-icon:          rgba(200, 190, 170, 0.85);
+    --bg-overlay: #fcfbf8;
+    /* background-light */
+    --bg-secondary: #fff9f0;
+    /* chibi-cream */
+    --bg-tertiary: #ffe5d9;
+    /* chibi-peach */
+    --bg-input: #ffffff;
+    --bg-hover: rgba(244, 192, 37, 0.15);
+    --bg-icon: #fff9f0;
 
-    --border-color:     rgba(100, 80, 50, 0.20);
-    --border-icon:      rgba(100, 80, 50, 0.30);
+    --border-color: rgba(244, 192, 37, 0.2);
+    --border-icon: rgba(244, 192, 37, 0.3);
 
-    --text-color:       #2C2416;
-    --text-muted:       #7A6A50;
+    --text-color: #4a3728;
+    /* chibi-brown */
+    --text-muted: rgba(74, 55, 40, 0.6);
 
-    --accent-gold:           #8B6914;
-    --accent-gold-dim:       rgba(139, 105, 20, 0.12);
-    --accent-gold-border:    rgba(139, 105, 20, 0.35);
-    --accent-crimson:        #7A1515;
-    --accent-crimson-hover:  #961c1c;
-    --accent-crimson-glow:   rgba(122, 21, 21, 0.35);
-    --accent-crimson-dim:    rgba(122, 21, 21, 0.10);
+    --accent-gold: #f4c025;
+    --accent-gold-dim: rgba(244, 192, 37, 0.2);
+    --accent-gold-border: rgba(244, 192, 37, 0.4);
+    --accent-crimson: #ff8aa1;
+    --accent-crimson-hover: #ff9eae;
+    --accent-crimson-glow: rgba(255, 138, 161, 0.4);
+    --accent-crimson-dim: rgba(255, 138, 161, 0.15);
 
-    --status-active:    #1A7A50;
+    --status-active: #40c9a2;
 
-    --message-user-bg:  rgba(122, 21, 21, 0.15);
-    --message-ai-bg:    rgba(220, 210, 195, 0.80);
+    --message-user-bg: #f4c025;
+    --message-user-text: #221e10;
+    --message-ai-bg: #fff9f0;
+    --message-ai-text: #4a3728;
 
-    --badge-bg:         rgba(200, 190, 175, 0.92);
-    --badge-color:      #6A5A40;
+    --badge-bg: #fff9f0;
+    --badge-color: #4a3728;
 
-    --scrollbar-thumb:  rgba(139, 105, 20, 0.35);
+    --scrollbar-thumb: #f4c025;
 
-    --dropdown-bg:      rgba(248, 244, 235, 0.99);
-    --dropdown-border:  rgba(139, 105, 20, 0.35);
-    --dropdown-hover:   rgba(0, 0, 0, 0.05);
+    --dropdown-bg: #fcfbf8;
+    --dropdown-border: rgba(244, 192, 37, 0.3);
+    --dropdown-hover: rgba(244, 192, 37, 0.15);
 
-    --warning-bg:       rgba(122, 21, 21, 0.10);
-    --warning-text:     #9B2020;
-    --warning-border:   #7A1515;
+    --warning-bg: rgba(255, 138, 161, 0.1);
+    --warning-text: #d44a68;
+    --warning-border: #ff8aa1;
 
-    --toast-bg:         rgba(122, 21, 21, 0.90);
+    --toast-bg: rgba(255, 138, 161, 0.95);
 
-    --ai-panel-bg:      rgba(240, 234, 220, 0.99);
-    --ai-panel-border:  rgba(139, 105, 20, 0.25);
+    --ai-panel-bg: #fcfbf8;
+    --ai-panel-border: rgba(244, 192, 37, 0.3);
 
-    --card-bg:          rgba(238, 232, 218, 0.92);
-    --card-border:      rgba(139, 105, 20, 0.25);
+    --card-bg: #fff9f0;
+    --card-border: rgba(244, 192, 37, 0.3);
   }
 }
 
 /* ─── 수동 오버라이드: 다크 ─── */
 html[data-theme="dark"] {
-  --bg-overlay:       rgba(20, 18, 18, 0.95);
-  --bg-secondary:     rgba(0, 0, 0, 0.40);
-  --bg-tertiary:      rgba(45, 45, 45, 0.85);
-  --bg-input:         rgba(255, 255, 255, 0.05);
-  --bg-hover:         rgba(255, 255, 255, 0.10);
-  --bg-icon:          rgba(20, 20, 25, 0.70);
+  --bg-overlay: #221e10;
+  --bg-secondary: #2a2515;
+  --bg-tertiary: #332d19;
+  --bg-input: rgba(255, 255, 255, 0.05);
+  --bg-hover: rgba(244, 192, 37, 0.15);
+  --bg-icon: #2a2515;
 
-  --border-color:     rgba(255, 255, 255, 0.10);
-  --border-icon:      rgba(255, 255, 255, 0.15);
+  --border-color: rgba(244, 192, 37, 0.15);
+  --border-icon: rgba(244, 192, 37, 0.2);
 
-  --text-color:       #ECECEC;
-  --text-muted:       #8E8E93;
+  --text-color: #fcfbf8;
+  --text-muted: rgba(252, 251, 248, 0.6);
 
-  --accent-gold:           #C9A84C;
-  --accent-gold-dim:       rgba(201, 168, 76, 0.15);
-  --accent-gold-border:    rgba(201, 168, 76, 0.30);
-  --accent-crimson:        #8B1A1A;
-  --accent-crimson-hover:  #a02020;
-  --accent-crimson-glow:   rgba(139, 26, 26, 0.50);
-  --accent-crimson-dim:    rgba(139, 26, 26, 0.15);
+  --accent-gold: #f4c025;
+  --accent-gold-dim: rgba(244, 192, 37, 0.15);
+  --accent-gold-border: rgba(244, 192, 37, 0.3);
+  --accent-crimson: #ff7a85;
+  --accent-crimson-hover: #ff96a0;
+  --accent-crimson-glow: rgba(255, 122, 133, 0.4);
+  --accent-crimson-dim: rgba(255, 122, 133, 0.15);
 
-  --status-active:    #20C997;
+  --status-active: #66edc1;
 
-  --message-user-bg:  rgba(139, 26, 26, 0.65);
-  --message-ai-bg:    rgba(45, 45, 45, 0.85);
+  --message-user-bg: #f4c025;
+  --message-user-text: #221e10;
+  --message-ai-bg: #2a2515;
+  --message-ai-text: #fcfbf8;
 
-  --badge-bg:         rgba(60, 60, 70, 0.90);
-  --badge-color:      #b0b0b0;
+  --badge-bg: #332d19;
+  --badge-color: #fcfbf8;
 
-  --scrollbar-thumb:  rgba(201, 168, 76, 0.30);
+  --scrollbar-thumb: rgba(244, 192, 37, 0.4);
 
-  --dropdown-bg:      rgba(25, 22, 22, 0.98);
-  --dropdown-border:  rgba(201, 168, 76, 0.30);
-  --dropdown-hover:   rgba(255, 255, 255, 0.07);
+  --dropdown-bg: #221e10;
+  --dropdown-border: rgba(244, 192, 37, 0.3);
+  --dropdown-hover: rgba(244, 192, 37, 0.15);
 
-  --warning-bg:       rgba(139, 26, 26, 0.15);
-  --warning-text:     #FF6B6B;
-  --warning-border:   #8B1A1A;
+  --warning-bg: rgba(255, 138, 161, 0.1);
+  --warning-text: #ff8aa1;
+  --warning-border: #ff8aa1;
 
-  --toast-bg:         rgba(139, 26, 26, 0.90);
+  --toast-bg: rgba(255, 138, 161, 0.95);
 
-  --ai-panel-bg:      rgba(28, 24, 18, 0.98);
-  --ai-panel-border:  rgba(201, 168, 76, 0.20);
+  --ai-panel-bg: #221e10;
+  --ai-panel-border: rgba(244, 192, 37, 0.3);
 
-  --card-bg:          rgba(30, 28, 25, 0.90);
-  --card-border:      rgba(201, 168, 76, 0.20);
+  --card-bg: #2a2515;
+  --card-border: rgba(244, 192, 37, 0.3);
 }
 
 /* ─── 수동 오버라이드: 라이트 ─── */
 html[data-theme="light"] {
-  --bg-overlay:       rgba(245, 240, 228, 0.97);
-  --bg-secondary:     rgba(200, 190, 170, 0.50);
-  --bg-tertiary:      rgba(220, 210, 190, 0.85);
-  --bg-input:         rgba(0, 0, 0, 0.05);
-  --bg-hover:         rgba(0, 0, 0, 0.07);
-  --bg-icon:          rgba(200, 190, 170, 0.85);
+  --bg-overlay: #fcfbf8;
+  --bg-secondary: #fff9f0;
+  --bg-tertiary: #ffe5d9;
+  --bg-input: #ffffff;
+  --bg-hover: rgba(244, 192, 37, 0.15);
+  --bg-icon: #fff9f0;
 
-  --border-color:     rgba(100, 80, 50, 0.20);
-  --border-icon:      rgba(100, 80, 50, 0.30);
+  --border-color: rgba(244, 192, 37, 0.2);
+  --border-icon: rgba(244, 192, 37, 0.3);
 
-  --text-color:       #2C2416;
-  --text-muted:       #7A6A50;
+  --text-color: #4a3728;
+  --text-muted: rgba(74, 55, 40, 0.6);
 
-  --accent-gold:           #8B6914;
-  --accent-gold-dim:       rgba(139, 105, 20, 0.12);
-  --accent-gold-border:    rgba(139, 105, 20, 0.35);
-  --accent-crimson:        #7A1515;
-  --accent-crimson-hover:  #961c1c;
-  --accent-crimson-glow:   rgba(122, 21, 21, 0.35);
-  --accent-crimson-dim:    rgba(122, 21, 21, 0.10);
+  --accent-gold: #f4c025;
+  --accent-gold-dim: rgba(244, 192, 37, 0.2);
+  --accent-gold-border: rgba(244, 192, 37, 0.4);
+  --accent-crimson: #ff8aa1;
+  --accent-crimson-hover: #ff9eae;
+  --accent-crimson-glow: rgba(255, 138, 161, 0.4);
+  --accent-crimson-dim: rgba(255, 138, 161, 0.15);
 
-  --status-active:    #1A7A50;
+  --status-active: #40c9a2;
 
-  --message-user-bg:  rgba(122, 21, 21, 0.15);
-  --message-ai-bg:    rgba(220, 210, 195, 0.80);
+  --message-user-bg: #f4c025;
+  --message-user-text: #221e10;
+  --message-ai-bg: #fff9f0;
+  --message-ai-text: #4a3728;
 
-  --badge-bg:         rgba(200, 190, 175, 0.92);
-  --badge-color:      #6A5A40;
+  --badge-bg: #fff9f0;
+  --badge-color: #4a3728;
 
-  --scrollbar-thumb:  rgba(139, 105, 20, 0.35);
+  --scrollbar-thumb: #f4c025;
 
-  --dropdown-bg:      rgba(248, 244, 235, 0.99);
-  --dropdown-border:  rgba(139, 105, 20, 0.35);
-  --dropdown-hover:   rgba(0, 0, 0, 0.05);
+  --dropdown-bg: #fcfbf8;
+  --dropdown-border: rgba(244, 192, 37, 0.3);
+  --dropdown-hover: rgba(244, 192, 37, 0.15);
 
-  --warning-bg:       rgba(122, 21, 21, 0.10);
-  --warning-text:     #9B2020;
-  --warning-border:   #7A1515;
+  --warning-bg: rgba(255, 138, 161, 0.1);
+  --warning-text: #d44a68;
+  --warning-border: #ff8aa1;
 
-  --toast-bg:         rgba(122, 21, 21, 0.90);
+  --toast-bg: rgba(255, 138, 161, 0.95);
 
-  --ai-panel-bg:      rgba(240, 234, 220, 0.99);
-  --ai-panel-border:  rgba(139, 105, 20, 0.25);
+  --ai-panel-bg: #fcfbf8;
+  --ai-panel-border: rgba(244, 192, 37, 0.3);
 
-  --card-bg:          rgba(238, 232, 218, 0.92);
-  --card-border:      rgba(139, 105, 20, 0.25);
+  --card-bg: #fff9f0;
+  --card-border: rgba(244, 192, 37, 0.3);
 }

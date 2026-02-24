@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>새 에이전트 추가</title>
+    <title id="page-title">새 에이전트 추가</title>
     <link rel="stylesheet" href="styles/themes.css">
     <link rel="stylesheet" href="styles/add-agent.css">
 </head>
@@ -12,7 +12,7 @@
 <body>
     <div class="add-agent-modal">
         <header class="modal-header">
-            <h1>새 에이전트 추가</h1>
+            <h1 id="modal-title">새 에이전트 추가</h1>
             <button type="button" class="btn-close" id="btn-close" aria-label="닫기">✕</button>
         </header>
 
@@ -40,6 +40,7 @@
             <label class="field">
                 <span>모델</span>
                 <input id="agent-model" type="text" placeholder="예: claude-3-7-sonnet-20250219">
+                <select id="agent-model-select" hidden></select>
             </label>
 
             <label class="field">

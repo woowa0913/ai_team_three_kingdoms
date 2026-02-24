@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AI Orchestra Chibi Chat Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#f4c025",
+                        "background-light": "#fcfbf8",
+                        "background-dark": "#221e10",
+                        "chibi-peach": "#ffe5d9",
+                        "chibi-cream": "#fff9f0",
+                        "chibi-gold": "#d4af37",
+                        "chibi-brown": "#4a3728",
+                    },
+                    fontFamily: {
+                        "display": ["Plus Jakarta Sans", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>body {
+    font-family: "Plus Jakarta Sans", sans-serif
+    }
+.oriental-pattern {
+    background-color: #fcfbf8;
+    background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuCGy46XLEps-ddgVpqbzfPNV_SsRaZ3TUda45Sc6iIWkuQlBWsv6NTqTlACI1NtTx1zxW36KLgR5hYm1gRKj_uLZSimDEByFyXyguDcetNRGQsCiPSxh-HziVRJzt1mNfFyiCEIhozfTHGS5CsNPqvtwZ2xMl2BQnFuK39a8s2LWlMgI0_zUyba0FOoZQmMOcEJrWAp2HYG6hszo7hwYs3kG2DvSz2xGlXsjAkoiN7DvJIh3JS9R88witAcIS_CrWX7GfQpu_86tU0);
+    /* Subtle texture overlay for premium feel */
+    }
+.custom-scrollbar::-webkit-scrollbar {
+    width: 4px
+    }
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent
+    }
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #f4c025;
+    border-radius: 10px
+    }</style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100">
+<div class="relative flex h-screen w-full flex-col overflow-hidden max-w-md mx-auto border-x border-primary/10 shadow-2xl">
+<!-- Premium Header Area -->
+<header class="bg-background-light dark:bg-background-dark px-4 pt-6 pb-2 border-b border-primary/10">
+<div class="flex items-center justify-between gap-3 mb-4">
+<div class="relative">
+<div class="size-16 rounded-full border-4 border-primary bg-chibi-peach overflow-hidden shadow-lg">
+<img alt="Chibi Zhuge Liang" class="w-full h-full object-cover" data-alt="A cute chibi character with a traditional scholar hat" src="https://lh3.googleusercontent.com/aida-public/AB6AXuArg01mzDxTgz1jeuhlmqYaUtV-XUl_Goui4DoLTLhzV9JH_02n9AEdAdsOxwxODwnYg0NCscnUJ6fKFVjbVV3QXj6DLE-bBGurKWUsxdnUs4RmYuRNKRNIoYI80Jr0TuAYeKxyDQCFN42Zdwr7AxfCwaIR3jrDmDnKCNCS4r5I8ySE237TVdSjGXIU5Nf3w-2d8DWimM-YnDarQ-L_u7_fFhwPia3QXxSjM1GqaVNbwwgzoQVXOkY_MI2E4aY05Vd0QqLDkdFw2Os"/>
+</div>
+<div class="absolute -bottom-1 -right-1 bg-primary text-background-dark text-[10px] font-bold px-2 py-0.5 rounded-full border-2 border-background-light">LV.99</div>
+</div>
+<div class="flex-1">
+<h1 class="text-xl font-bold text-chibi-brown dark:text-primary">Zhuge Liang</h1>
+<p class="text-xs text-chibi-brown/60 dark:text-slate-400">The Sleeping Dragon</p>
+</div>
+<div class="relative">
+<button class="flex items-center gap-1 bg-chibi-cream dark:bg-primary/20 border-2 border-primary/30 px-3 py-2 rounded-xl text-chibi-brown dark:text-primary font-bold text-sm shadow-sm">
+<span class="material-symbols-outlined text-lg">reorder</span>
+<span>Swap</span>
+</button>
+</div>
+</div>
+<!-- Tab Bar -->
+<div class="flex gap-2 p-1 bg-primary/10 rounded-2xl">
+<button class="flex-1 py-2 rounded-xl bg-primary text-background-dark font-bold text-sm shadow-sm flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-sm leading-none">chat</span>
+                    Chat
+                </button>
+<button class="flex-1 py-2 rounded-xl text-chibi-brown dark:text-slate-300 font-semibold text-sm flex items-center justify-center gap-1 hover:bg-primary/5">
+<span class="material-symbols-outlined text-sm leading-none">person_celebrate</span>
+                    Persona
+                </button>
+<button class="flex-1 py-2 rounded-xl text-chibi-brown dark:text-slate-300 font-semibold text-sm flex items-center justify-center gap-1 hover:bg-primary/5">
+<span class="material-symbols-outlined text-sm leading-none">auto_awesome</span>
+                    Skills
+                </button>
+</div>
+</header>
+<!-- Main Chat Area -->
+<main class="flex-1 overflow-y-auto oriental-pattern p-4 space-y-6 custom-scrollbar dark:bg-background-dark/50">
+<!-- AI Message -->
+<div class="flex items-end gap-2">
+<div class="size-8 rounded-full bg-chibi-peach border-2 border-primary overflow-hidden shrink-0 shadow-sm">
+<img alt="Mini Zhuge" class="w-full h-full" data-alt="Small avatar of chibi Zhuge Liang" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBiGS-FApCmafL6jbYLJjChWQ2aKVwZ9yzps-0C4WAD2ucntVXgOzwQNP9VgIdq4xdLCqqXaQxrPgBkJdBs6xSvMiRi8xQRlm0HEr45oTx6OXCCmbYtgy_xB52VA8ozbLISGMAcUTBltXPLcE7umQy4zJFRxTWNNxewMxKZ-f5kFFGR_Hpdnxt_FevLxfQrpEf3fjvW49FvwzWU6dqJ3gvPpxhd6TwufJIsxcpBZlrwcpvauX7kAkKuSP_WsJZvKbKxlts_weVv4ks"/>
+</div>
+<div class="flex flex-col gap-1 max-w-[80%]">
+<span class="text-[10px] font-bold text-chibi-brown/50 dark:text-primary/50 ml-2 uppercase tracking-widest">Master Strategist</span>
+<div class="bg-chibi-cream dark:bg-slate-800 text-chibi-brown dark:text-slate-100 p-4 rounded-2xl rounded-bl-none shadow-sm border border-primary/5 relative">
+<p class="text-sm leading-relaxed">Greetings, My Lord. The stars are aligned and the winds are favorable. What grand design shall we weave today? Shall we compose a poem or conquer a challenge?</p>
+</div>
+</div>
+</div>
+<!-- User Message -->
+<div class="flex items-end justify-end gap-2">
+<div class="flex flex-col gap-1 items-end max-w-[80%]">
+<span class="text-[10px] font-bold text-chibi-brown/50 dark:text-primary/50 mr-2 uppercase tracking-widest">Grand Commander</span>
+<div class="bg-primary text-background-dark p-4 rounded-2xl rounded-br-none shadow-md font-medium">
+<p class="text-sm">I'd like to hear a poem about the cherry blossoms and the spring breeze at the Red Cliffs.</p>
+</div>
+</div>
+<div class="size-8 rounded-full bg-primary overflow-hidden shrink-0 shadow-sm border-2 border-white">
+<img alt="User Avatar" class="w-full h-full" data-alt="A cute chibi avatar representing the user" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDq9SffwydaScu4DwfZ_ukbHNrsoRkQDwPqQZ7FjziglvJS47U46C-5OXCxvD83xB9lXtOkhotnKd3VgWvzewTclRBJwN-WP3SkloJSXTpmv8qyg5aqimNBCGP4koAaIFEx_POmjgTBKRb9JLJGVnEinRE1wSFOiKCzD8oaA6zY-5ih8FIWluG1GF6HNl1rHxfcfWuJHirXH5tCBHhKYeoqJKX3aeu2hdYzHJ0ATgUvEsuNeDoRy6VnbE2-nLf6XXzZX8XmVI2EGrk"/>
+</div>
+</div>
+<!-- AI Message -->
+<div class="flex items-end gap-2">
+<div class="size-8 rounded-full bg-chibi-peach border-2 border-primary overflow-hidden shrink-0 shadow-sm">
+<img alt="Mini Zhuge" class="w-full h-full" data-alt="Small avatar of chibi Zhuge Liang" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB63rDua9UGYg6Dx8PD9-5vPa0hnDM9mVSb2zN8hGld3aNiUKAuaJsQYszU2Lv2SXK8LbMgTmX3rj7ZEplyOAETzUy5VbqX6wb87J3awhTij1ySo5DsknJMcTCmTX1DHkB3i0oOmta070uKrDYHcvbQJSCoTTZuMYiWHBLWHdakI2UgomQjyNsHo-C3ZzjPUiw0q8wdmyrHQClBg0d30v8QXB1jP0o-lpy62YN3oq6cwyIGUjBDKGTZ2Jo9_BS9kaUzv5bVkurPkkU"/>
+</div>
+<div class="flex flex-col gap-1 max-w-[80%]">
+<span class="text-[10px] font-bold text-chibi-brown/50 dark:text-primary/50 ml-2 uppercase tracking-widest">Master Strategist</span>
+<div class="bg-chibi-cream dark:bg-slate-800 text-chibi-brown dark:text-slate-100 p-4 rounded-2xl rounded-bl-none shadow-sm border border-primary/5">
+<p class="text-sm italic italic leading-relaxed">"The eastern wind whispers through the petals,<br/>Red Cliffs stained with the blush of spring,<br/>Longing for the peace our strategy settles,<br/>As the river birds begin to sing."</p>
+<p class="text-sm mt-2">Does this capture the heart of your vision, My Lord?</p>
+</div>
+</div>
+</div>
+</main>
+<!-- Input Area -->
+<footer class="p-4 bg-background-light dark:bg-background-dark">
+<div class="flex items-center gap-3 bg-chibi-cream dark:bg-slate-800 border-4 border-primary/20 rounded-full px-4 py-2 shadow-inner group transition-all focus-within:border-primary/40">
+<button class="text-primary hover:scale-110 transition-transform">
+<span class="material-symbols-outlined">add_circle</span>
+</button>
+<input class="flex-1 bg-transparent border-none focus:ring-0 text-sm text-chibi-brown dark:text-slate-100 placeholder:text-chibi-brown/40 dark:placeholder:text-slate-500" placeholder="Whisper your command..." type="text"/>
+<!-- Send Button Shaped like a Dumpling (Gyoza style) -->
+<button class="relative group">
+<div class="absolute -inset-1 bg-primary/20 rounded-full blur-sm group-hover:bg-primary/40"></div>
+<div class="relative bg-primary size-12 rounded-full flex items-center justify-center shadow-lg transform active:scale-95 transition-all overflow-hidden">
+<!-- Dumpling aesthetic via simple overlay -->
+<div class="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent"></div>
+<span class="material-symbols-outlined text-background-dark font-bold">send</span>
+</div>
+<!-- Steam indicator -->
+<div class="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-primary/40 text-xl animate-bounce">air</span>
+</div>
+</button>
+</div>
+</footer>
+<!-- Bottom Navigation Bar -->
+<nav class="flex gap-2 border-t border-primary/10 bg-background-light dark:bg-background-dark px-4 pb-3 pt-2">
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-primary" href="#">
+<div class="flex h-8 items-center justify-center">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1">house</span>
+</div>
+<p class="text-xs font-bold leading-normal tracking-[0.015em]">Home</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-chibi-brown/50 dark:text-slate-400" href="#">
+<div class="flex h-8 items-center justify-center">
+<span class="material-symbols-outlined">chat_bubble</span>
+</div>
+<p class="text-xs font-medium leading-normal tracking-[0.015em]">Chat</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-chibi-brown/50 dark:text-slate-400" href="#">
+<div class="flex h-8 items-center justify-center">
+<span class="material-symbols-outlined">history</span>
+</div>
+<p class="text-xs font-medium leading-normal tracking-[0.015em]">History</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-chibi-brown/50 dark:text-slate-400" href="#">
+<div class="flex h-8 items-center justify-center">
+<span class="material-symbols-outlined">settings</span>
+</div>
+<p class="text-xs font-medium leading-normal tracking-[0.015em]">Settings</p>
+</a>
+</nav>
+</div>
+</body></html>

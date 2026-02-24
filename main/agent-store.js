@@ -95,6 +95,7 @@ function validateAgentPayload(agentData = {}) {
     const trimmed = {
         name: typeof agentData.name === 'string' ? agentData.name.trim() : '',
         emoji: typeof agentData.emoji === 'string' ? agentData.emoji.trim() : '🤖',
+        image: typeof agentData.image === 'string' ? agentData.image.trim() : '',
         provider: typeof agentData.provider === 'string' ? agentData.provider.trim().toLowerCase() : '',
         model: typeof agentData.model === 'string' ? agentData.model.trim() : '',
         persona: typeof agentData.persona === 'string' ? agentData.persona.trim() : '',
@@ -121,6 +122,7 @@ function addAgent(agentData) {
         id: `agent-${Date.now()}`,
         name: validated.name,
         emoji: validated.emoji || '🤖',
+        image: validated.image || '',
         provider: validated.provider,
         model: validated.model,
         persona: validated.persona || `${validated.name} 에이전트입니다.`,
@@ -173,6 +175,72 @@ function updateAgentPersona(agentId, persona) {
     return updated;
 }
 
+function normalizeOptionalString(value) {
+    return typeof value === 'string' ? value.trim() : undefined;
+}
+
+function updateAgent(agentId, payload = {}) {
+    if (!agentId) {
+        throw new Error('agentId가 필요합니다.');
+    }
+
+    const agents = getAgents();
+    const index = agents.findIndex((agent) => agent.id === agentId);
+    if (index < 0) {
+        throw new Error('에이전트를 찾을 수 없습니다.');
+    }
+
+    const current = agents[index];
+    const name = normalizeOptionalString(payload.name);
+    const emoji = normalizeOptionalString(payload.emoji);
+    const model = normalizeOptionalString(payload.model);
+    const expertise = normalizeOptionalString(payload.expertise);
+
+    if (name !== undefined && !name) {
+        throw new Error('에이전트 이름을 입력해주세요.');
+    }
+    if (model !== undefined && !model) {
+        throw new Error('모델명을 입력해주세요.');
+    }
+
+    const updated = {
+        ...current,
+        name: name !== undefined ? name : current.name,
+        emoji: emoji !== undefined ? (emoji || '🤖') : (current.emoji || '🤖'),
+        model: model !== undefined ? model : current.model,
+        expertise: expertise !== undefined ? expertise : current.expertise,
+    };
+
+    agents[index] = updated;
+    store.set('agents', agents);
+    return updated;
+}
+
+function reorderAgent(agentId, direction) {
+    if (!agentId) {
+        throw new Error('agentId가 필요합니다.');
+    }
+    if (!['left', 'right'].includes(direction)) {
+        throw new Error('direction은 left 또는 right여야 합니다.');
+    }
+
+    const agents = getAgents();
+    const index = agents.findIndex((agent) => agent.id === agentId);
+    if (index < 0) {
+        throw new Error('에이전트를 찾을 수 없습니다.');
+    }
+
+    const nextIndex = direction === 'left' ? index - 1 : index + 1;
+    if (nextIndex < 0 || nextIndex >= agents.length) {
+        return agents;
+    }
+
+    const [target] = agents.splice(index, 1);
+    agents.splice(nextIndex, 0, target);
+    store.set('agents', agents);
+    return agents;
+}
+
 module.exports = {
     getAgents,
     getAgent,
@@ -182,4 +250,6 @@ module.exports = {
     addAgent,
     deleteAgent,
     updateAgentPersona,
+    updateAgent,
+    reorderAgent,
 };

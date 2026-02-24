@@ -7,7 +7,7 @@ let settingsWindow = null;
 let meetingWindow = null;
 let addAgentWindow = null;
 
-function createDashboardWindow(agentId) {
+function createDashboardWindow(agentId, onClosed) {
     if (!agentId || typeof agentId !== 'string') {
         return null;
     }
@@ -43,6 +43,9 @@ function createDashboardWindow(agentId) {
 
     dashboardWindow.on('closed', () => {
         dashboardWindows.delete(agentId);
+        if (typeof onClosed === 'function') {
+            onClosed(agentId);
+        }
     });
 
     const dashboardPath = path.join(__dirname, '..', 'renderer', 'dashboard.html');
@@ -172,8 +175,17 @@ function createMeetingWindow() {
     return meetingWindow;
 }
 
-function createAddAgentWindow() {
+function createAddAgentWindow(agentId = '') {
+    const safeAgentId = typeof agentId === 'string' ? agentId : '';
+    const addAgentQuery = safeAgentId ? { query: { agentId: safeAgentId } } : undefined;
+    const addAgentPath = path.join(__dirname, '..', 'renderer', 'add-agent.html');
+
     if (addAgentWindow && !addAgentWindow.isDestroyed()) {
+        if (fs.existsSync(addAgentPath)) {
+            addAgentWindow.loadFile(addAgentPath, addAgentQuery).catch((error) => {
+                console.error('에이전트 추가창 리로드 실패:', error);
+            });
+        }
         addAgentWindow.focus();
         return addAgentWindow;
     }
@@ -202,9 +214,8 @@ function createAddAgentWindow() {
         addAgentWindow = null;
     });
 
-    const addAgentPath = path.join(__dirname, '..', 'renderer', 'add-agent.html');
     if (fs.existsSync(addAgentPath)) {
-        addAgentWindow.loadFile(addAgentPath).catch((error) => {
+        addAgentWindow.loadFile(addAgentPath, addAgentQuery).catch((error) => {
             console.error('에이전트 추가창 로드 실패:', error);
         });
     } else {

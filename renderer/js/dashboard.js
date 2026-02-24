@@ -53,6 +53,27 @@ function showToast(message) {
         toast.classList.remove('visible');
     }, 2600);
 }
+
+function renderAssistantMarkdown(content) {
+    if (typeof content !== 'string') {
+        return '';
+    }
+    if (typeof window.renderMarkdown === 'function') {
+        return window.renderMarkdown(content);
+    }
+    return content
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
+function applyAssistantContent(contentEl, content) {
+    if (!contentEl) {
+        return;
+    }
+    contentEl.innerHTML = renderAssistantMarkdown(content);
+}
+
 function createMessageElement(message, options = {}) {
     const messageEl = document.createElement('article');
     messageEl.className = `message ${message.role}`;
@@ -61,7 +82,12 @@ function createMessageElement(message, options = {}) {
     }
     const contentEl = document.createElement('div');
     contentEl.className = 'message-content';
-    contentEl.textContent = message.content || '';
+    const safeContent = message.content || '';
+    if (message.role === 'assistant' && !options.streaming) {
+        applyAssistantContent(contentEl, safeContent);
+    } else {
+        contentEl.textContent = safeContent;
+    }
     messageEl.appendChild(contentEl);
     const timestampEl = document.createElement('time');
     timestampEl.className = 'message-timestamp';
@@ -130,7 +156,17 @@ async function loadAgentMeta(agentId) {
         agentName.textContent = agent.name || '';
     }
     if (agentEmoji) {
-        agentEmoji.textContent = agent.emoji || '🤖';
+        if (agent.image) {
+            agentEmoji.innerHTML = '';
+            const headerImg = document.createElement('img');
+            headerImg.className = 'agent-header-img';
+            headerImg.src = agent.image;
+            headerImg.alt = agent.name || 'agent';
+            agentEmoji.appendChild(headerImg);
+        } else {
+            agentEmoji.innerHTML = '';
+            agentEmoji.textContent = agent.emoji || '🤖';
+        }
     }
     if (agentModel) {
         agentModel.textContent = agent.model || '';
@@ -283,6 +319,10 @@ function handleStreamChunk(data) {
     }
 }
 function handleStreamEnd() {
+    if (state.streamingContentEl) {
+        const finalContent = state.streamingContentEl.textContent || '';
+        applyAssistantContent(state.streamingContentEl, finalContent);
+    }
     finalizeStreamingMessage();
 }
 function handleStreamError(data) {
@@ -344,6 +384,24 @@ async function clearHistory() {
         showToast('대화 기록을 초기화했습니다.');
     } catch (error) {
         showToast(error.message || '대화 기록 초기화에 실패했습니다.');
+    }
+}
+
+async function exportChat() {
+    if (!state.agentId || !window.electronAPI?.exportChat) {
+        return;
+    }
+    try {
+        const result = await window.electronAPI.exportChat(state.agentId);
+        if (!result?.ok) {
+            if (result?.canceled) {
+                return;
+            }
+            throw new Error(result?.error || '내보내기에 실패했습니다.');
+        }
+        showToast('대화 기록을 저장했습니다.');
+    } catch (error) {
+        showToast(error.message || '대화 기록 저장 실패');
     }
 }
 
@@ -535,6 +593,7 @@ async function init() {
     const messageInput = ui.messageInput();
     const sendButton = ui.sendButton();
     const clearButton = ui.clearButton();
+    const exportButton = document.querySelector('.btn-export');
     const closeButton = ui.closeButton();
     if (messageInput) {
         messageInput.addEventListener('input', updateSendButtonState);
@@ -550,6 +609,9 @@ async function init() {
     }
     if (clearButton) {
         clearButton.addEventListener('click', clearHistory);
+    }
+    if (exportButton) {
+        exportButton.addEventListener('click', exportChat);
     }
     if (closeButton) {
         closeButton.addEventListener('click', () => window.close());

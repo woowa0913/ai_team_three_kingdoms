@@ -1,4 +1,6 @@
-const { app, BrowserWindow, ipcMain, screen, Tray, nativeImage, nativeTheme } = require('electron');
+const { app, BrowserWindow, ipcMain, screen, Tray, nativeImage, nativeTheme, dialog, globalShortcut } = require('electron');
+const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const Store = require('electron-store');
 const { createDashboardWindow, createSettingsWindow, createMeetingWindow, createAddAgentWindow } = require('./main/window-manager');
@@ -11,6 +13,162 @@ let tray;
 let meetingSessionId = 0;
 let meetingSender = null;
 let isMeetingLoopRunning = false;
+
+const CRASH_LOG_PATH = path.join(os.homedir(), 'Library', 'Application Support', 'ai-orchestra', 'crash-log.txt');
+const PRIMARY_WIDGET_SHORTCUT = 'CommandOrControl+Shift+Space';
+const FALLBACK_WIDGET_SHORTCUT = 'Alt+Space';
+
+function formatExportDate(timestamp = Date.now()) {
+    const date = new Date(timestamp);
+    return new Intl.DateTimeFormat('ko-KR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+    }).format(date);
+}
+
+function formatExportTime(timestamp = Date.now()) {
+    const date = new Date(timestamp);
+    return new Intl.DateTimeFormat('ko-KR', {
+        hour: '2-digit',
+        minute: '2-digit',
+    }).format(date);
+}
+
+function buildChatExportText(agent, history) {
+    const agentName = agent?.name || '에이전트';
+    const lines = [
+        `[${agentName}] 대화 기록 (${formatExportDate()})`,
+        '───────────────────────',
+    ];
+
+    history.forEach((message) => {
+        const roleLabel = message.role === 'assistant' ? agentName : 'User';
+        lines.push(`[${roleLabel}] ${formatExportTime(message.timestamp)}`);
+        lines.push(message.content || '');
+        lines.push('');
+    });
+
+    lines.push('───────────────────────');
+    return lines.join('\n');
+}
+
+function buildMeetingExportText(meetingState) {
+    const topic = meetingState?.topic || '회의 주제 미기재';
+    const lines = [
+        `[작전 회의실] 회의 기록 (${formatExportDate()})`,
+        `주제: ${topic}`,
+        '───────────────────────',
+    ];
+
+    (meetingState?.history || []).forEach((speech) => {
+        lines.push(`[${speech.agentName || '알 수 없는 화자'}] ${formatExportTime(speech.timestamp)}`);
+        lines.push(speech.content || '');
+        lines.push('');
+    });
+
+    lines.push('───────────────────────');
+    return lines.join('\n');
+}
+
+function toggleWidgetVisibility() {
+    if (!widgetWindow || widgetWindow.isDestroyed()) {
+        createWidgetWindow();
+        return;
+    }
+
+    if (widgetWindow.isVisible()) {
+        widgetWindow.hide();
+        return;
+    }
+
+    widgetWindow.show();
+    widgetWindow.focus();
+}
+
+function registerWidgetShortcut() {
+    let registered = false;
+    try {
+        registered = globalShortcut.register(PRIMARY_WIDGET_SHORTCUT, toggleWidgetVisibility);
+    } catch (error) {
+        console.warn(`전역 단축키 등록 실패 (${PRIMARY_WIDGET_SHORTCUT}):`, error);
+    }
+
+    if (registered) {
+        return;
+    }
+
+    console.warn(`전역 단축키 등록 실패: ${PRIMARY_WIDGET_SHORTCUT}, 대체 키를 시도합니다.`);
+    try {
+        const fallbackRegistered = globalShortcut.register(FALLBACK_WIDGET_SHORTCUT, toggleWidgetVisibility);
+        if (!fallbackRegistered) {
+            console.warn(`대체 전역 단축키 등록 실패: ${FALLBACK_WIDGET_SHORTCUT}`);
+        }
+    } catch (error) {
+        console.warn(`대체 전역 단축키 등록 중 예외 (${FALLBACK_WIDGET_SHORTCUT}):`, error);
+    }
+}
+
+function getStoredApiKey(provider) {
+    const keyMap = {
+        anthropic: 'api-key-anthropic',
+        openai: 'api-key-openai',
+        google: 'api-key-google',
+    };
+    const storeKey = keyMap[provider];
+    if (!storeKey) {
+        return '';
+    }
+    const key = store.get(storeKey, '');
+    return typeof key === 'string' ? key.trim() : '';
+}
+
+function serializeError(errorLike) {
+    if (errorLike instanceof Error) {
+        return errorLike.stack || errorLike.message || String(errorLike);
+    }
+    if (typeof errorLike === 'string') {
+        return errorLike;
+    }
+    try {
+        return JSON.stringify(errorLike);
+    } catch (_error) {
+        return String(errorLike);
+    }
+}
+
+function appendCrashLog(type, errorLike) {
+    const timestamp = new Date().toISOString();
+    const payload = serializeError(errorLike);
+    const entry = `[${timestamp}] [${type}]\n${payload}\n\n`;
+
+    try {
+        fs.mkdirSync(path.dirname(CRASH_LOG_PATH), { recursive: true });
+        fs.appendFileSync(CRASH_LOG_PATH, entry, 'utf8');
+    } catch (error) {
+        console.error('크래시 로그 저장 실패:', error);
+    }
+}
+
+process.on('unhandledRejection', (reason) => {
+    appendCrashLog('unhandledRejection', reason);
+});
+
+process.on('uncaughtException', (error) => {
+    const details = serializeError(error);
+    try {
+        dialog.showErrorBox('AI Orchestra 오류', details.slice(0, 2000));
+    } catch (_dialogError) {
+        // Dialog 호출 실패 시에도 종료 전 로그는 남긴다.
+    }
+    appendCrashLog('uncaughtException', error);
+    app.exit(1);
+});
+
+const gotSingleInstanceLock = app.requestSingleInstanceLock();
+if (!gotSingleInstanceLock) {
+    app.exit(0);
+}
 
 function getWidgetBounds() {
     const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
@@ -34,6 +192,15 @@ function broadcastAgentsUpdated() {
     const agents = agentStore.getAgents();
     if (widgetWindow && !widgetWindow.isDestroyed()) {
         widgetWindow.webContents.send('agents-updated', { agents });
+    }
+}
+
+function broadcastDashboardClosed(agentId) {
+    if (!agentId) {
+        return;
+    }
+    if (widgetWindow && !widgetWindow.isDestroyed()) {
+        widgetWindow.webContents.send('dashboard-closed', { agentId });
     }
 }
 
@@ -95,6 +262,7 @@ function createWidgetWindow() {
     });
     // Keep widget visible on all workspaces (macOS)
     widgetWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+    widgetWindow.setAlwaysOnTop(true, 'floating');
     widgetWindow.loadFile(path.join(__dirname, 'renderer', 'widget.html'));
     widgetWindow.once('ready-to-show', () => {
         if (!widgetWindow.isDestroyed()) {
@@ -187,15 +355,32 @@ async function runMeetingLoop(sessionId) {
         safeSendToMeeting('meeting-ended');
     }
 }
+app.on('second-instance', () => {
+    if (widgetWindow && !widgetWindow.isDestroyed()) {
+        if (widgetWindow.isMinimized()) {
+            widgetWindow.restore();
+        }
+        widgetWindow.show();
+        widgetWindow.focus();
+        return;
+    }
+    createWidgetWindow();
+});
+
+console.log('[BOOT] app ready 진입');
 app.whenReady().then(() => {
     createWidgetWindow();
     createTrayIcon();
+    registerWidgetShortcut();
     nativeTheme.on('updated', broadcastSystemThemeChanged);
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {
             createWidgetWindow();
         }
     });
+});
+app.on('will-quit', () => {
+    globalShortcut.unregisterAll();
 });
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
@@ -225,12 +410,21 @@ ipcMain.handle('delete-agent', async (_event, agentId) => {
         return { ok: false, error: error.message || '에이전트 삭제에 실패했습니다.' };
     }
 });
+ipcMain.handle('reorder-agent', async (_event, payload) => {
+    try {
+        const updatedAgents = agentStore.reorderAgent(payload?.agentId, payload?.direction);
+        broadcastAgentsUpdated();
+        return { ok: true, agents: updatedAgents };
+    } catch (error) {
+        return { ok: false, error: error.message || '에이전트 순서 변경에 실패했습니다.' };
+    }
+});
 ipcMain.on('open-dashboard', (event, agentId) => {
     try {
         if (!agentStore.getAgent(agentId)) {
             throw new Error('에이전트를 찾을 수 없습니다.');
         }
-        const dashboardWindow = createDashboardWindow(agentId);
+        const dashboardWindow = createDashboardWindow(agentId, broadcastDashboardClosed);
         if (
             dashboardWindow &&
             process.argv.includes('--dev') &&
@@ -264,6 +458,15 @@ ipcMain.handle('update-agent-persona', async (_event, payload) => {
         return { ok: true, agent: updated };
     } catch (error) {
         return { ok: false, error: error.message || '페르소나 저장에 실패했습니다.' };
+    }
+});
+ipcMain.handle('update-agent', async (_event, payload) => {
+    try {
+        const updated = agentStore.updateAgent(payload?.agentId, payload?.data);
+        broadcastAgentsUpdated();
+        return { ok: true, agent: updated };
+    } catch (error) {
+        return { ok: false, error: error.message || '에이전트 수정에 실패했습니다.' };
     }
 });
 ipcMain.handle('ai-improve-persona', async (event, payload) => {
@@ -335,6 +538,14 @@ ipcMain.handle('save-api-key', async (_event, payload) => {
     store.set(storeKey, key);
     return { ok: true };
 });
+ipcMain.handle('test-api-key', async (_event, provider) => {
+    const normalizedProvider = typeof provider === 'string' ? provider.trim().toLowerCase() : '';
+    if (!normalizedProvider) {
+        return { ok: false, error: 'provider가 필요합니다.' };
+    }
+    const apiKey = getStoredApiKey(normalizedProvider);
+    return apiManager.testApiKey(normalizedProvider, apiKey);
+});
 ipcMain.handle('load-api-keys', async () => {
     const mask = (key) => {
         if (!key || key.length < 8) {
@@ -347,6 +558,9 @@ ipcMain.handle('load-api-keys', async () => {
         openai: mask(store.get('api-key-openai', '')),
         google: mask(store.get('api-key-google', '')),
     };
+});
+ipcMain.handle('get-ollama-models', async () => {
+    return apiManager.getOllamaModels();
 });
 ipcMain.handle('get-theme', async () => {
     return getThemeState();
@@ -367,8 +581,8 @@ ipcMain.handle('set-theme', async (_event, mode) => {
 ipcMain.on('open-settings', () => {
     createSettingsWindow();
 });
-ipcMain.on('open-add-agent', () => {
-    createAddAgentWindow();
+ipcMain.on('open-add-agent', (_event, agentId) => {
+    createAddAgentWindow(typeof agentId === 'string' ? agentId : '');
 });
 ipcMain.on('open-meeting', () => {
     createMeetingWindow();
@@ -408,6 +622,58 @@ ipcMain.handle('stop-meeting', async () => {
 });
 ipcMain.handle('get-meeting-state', async () => {
     return meetingEngine.getState();
+});
+ipcMain.handle('export-chat', async (_event, payload) => {
+    try {
+        const agentId = payload?.agentId;
+        const agent = agentStore.getAgent(agentId);
+        if (!agent) {
+            throw new Error('에이전트를 찾을 수 없습니다.');
+        }
+        const history = agentStore.getChatHistory(agentId);
+        const defaultFileName = `${agent.name}-chat-${new Date().toISOString().slice(0, 10)}.txt`;
+        const result = await dialog.showSaveDialog({
+            title: '대화 기록 내보내기',
+            defaultPath: path.join(app.getPath('documents'), defaultFileName),
+            filters: [{ name: 'Text', extensions: ['txt'] }],
+        });
+
+        if (result.canceled || !result.filePath) {
+            return { ok: false, canceled: true };
+        }
+
+        const content = buildChatExportText(agent, history);
+        fs.writeFileSync(result.filePath, content, 'utf8');
+        return { ok: true, filePath: result.filePath };
+    } catch (error) {
+        return { ok: false, error: error.message || '대화 기록 내보내기에 실패했습니다.' };
+    }
+});
+ipcMain.handle('export-meeting', async () => {
+    try {
+        const meetingState = meetingEngine.getState();
+        const history = Array.isArray(meetingState?.history) ? meetingState.history : [];
+        if (history.length === 0) {
+            return { ok: false, error: '내보낼 회의 기록이 없습니다.' };
+        }
+
+        const defaultFileName = `meeting-${new Date().toISOString().slice(0, 10)}.txt`;
+        const result = await dialog.showSaveDialog({
+            title: '회의 기록 내보내기',
+            defaultPath: path.join(app.getPath('documents'), defaultFileName),
+            filters: [{ name: 'Text', extensions: ['txt'] }],
+        });
+
+        if (result.canceled || !result.filePath) {
+            return { ok: false, canceled: true };
+        }
+
+        const content = buildMeetingExportText(meetingState);
+        fs.writeFileSync(result.filePath, content, 'utf8');
+        return { ok: true, filePath: result.filePath };
+    } catch (error) {
+        return { ok: false, error: error.message || '회의 기록 내보내기에 실패했습니다.' };
+    }
 });
 ipcMain.handle('send-message', async (event, payload) => {
     try {

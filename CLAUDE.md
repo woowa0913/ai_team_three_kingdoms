@@ -37,10 +37,9 @@ Electron 기반 macOS 데스크톱 위젯 앱. 여러 AI 에이전트를 개별 
 
 ## Tech Stack
 - **Runtime**: Electron 34+ (Node.js 18+)
-- **Frontend**: 하이브리드 (창별 분리)
-  - `widget.html`: vanilla HTML/CSS/JS (경량, 항상 표시)
-  - `dashboard.html`, `meeting.html`: React + Vite (복잡한 상태 관리)
-  - `settings.html`: vanilla HTML/CSS/JS
+- **Frontend**: vanilla HTML/CSS/JS 전체 통일 (창별 분리)
+  - `widget.html` / `settings.html` / `add-agent.html`: 경량 vanilla JS
+  - `dashboard.html` / `meeting.html`: vanilla JS (복잡도 증가 시 React 전환 재검토)
 - **AI APIs**: Anthropic Claude, OpenAI GPT, Google Gemini, Ollama (로컬)
 - **Design Workflow**: 영자(Gemini + Stitch MCP + Pencil MCP) → DESIGN.md + 컴포넌트 시안 → Codex가 구현
 - **Architecture**: Main Process ↔ Preload (contextBridge) ↔ Renderer
@@ -91,7 +90,7 @@ ai-orchestra/
 3. **API 추상화**: 통합 APIClient 클래스 → provider별 어댑터 패턴
 4. **회의실 엔진**: 턴 기반 + 키워드 매칭 + 지명 발언 혼합
 5. **설정 저장**: ~/Library/Application Support/ai-orchestra/config.json
-6. **하이브리드 렌더러**: widget/settings → vanilla JS (경량), dashboard/meeting → React (복잡도 대응)
+6. **렌더러**: 전체 vanilla JS 통일. dashboard/meeting도 vanilla JS로 구현 완료. 상태 복잡도 증가 시 React 전환 재검토
 7. **디자인 워크플로우**: 영자(Gemini+Stitch MCP+Pencil MCP) → DESIGN.md + 컴포넌트 시안 → Codex(실제 코드 구현)
 8. **개발팀 역할**: 코다리=Claude(총괄기획/작업배분) / 영자=Gemini(디자인+UI) / Codex(코드 구현)
 
@@ -126,10 +125,29 @@ npm test           # 테스트 실행
   - [x] 버그픽스 3건: script 주석해제, 더미발언 제거, speech-bubble wrapper (번개 완료)
   - [x] preload.js 회의실 IPC 리스너 전체 연결 완료
   - [x] 코다리 QA 통과 (2026-02-24)
+- [x] Phase 2.5: 코드 품질 정리 완료 (번개, 2026-02-24)
+  - [x] dashboard.js 중복 함수 제거 + state 객체 정리
+  - [x] meeting.html 인라인 스타일 → meeting.css 이동
+  - [x] widget.html 인라인 JS → widget.js 분리
+  - [x] package.json start/dev 스크립트 ELECTRON_RUN_AS_NODE 충돌 수정
+  - [x] npm start 정상 기동 확인
+- [x] Phase 2.75: 안정성 패치 + 기능 완성 (코부장+번개, 2026-02-25)
+  - [x] A-1: 크래시 진단 로깅 (uncaughtException/unhandledRejection → crash-log.txt 저장)
+  - [x] A-1: app.requestSingleInstanceLock() — 중복 실행 시 기존 창 포커스 후 종료
+  - [x] A-2: widgetWindow.setAlwaysOnTop(true, 'floating') — 안티그래비티 레벨 수정
+  - [x] B-1: 회의 재시작 시 speech-log 초기화 (resetSpeechLog)
+  - [x] B-2: 위젯 배지 동기화 — 대시보드 닫힘 시 '⚫ 대기 중' 복원 (dashboard-closed IPC)
+  - [x] B-3: preload.js addSingleListener — IPC 리스너 중복 누적 방어
+  - [x] C-1: 에이전트 수정 기능 — add-agent 창 편집 모드 겸용, updateAgent IPC 추가
+  - [x] C-1: 위젯 에이전트 아이콘 우클릭 → 수정 창 열기
+  - [x] C-2: Ollama 연결 실패 시 명확한 오류 메시지 ("localhost:11434 확인해주세요")
 - [ ] Phase 3: E2E 통합 테스트 + 배포 준비
 
 ## Important Notes
-- Electron의 `alwaysOnTop` + `setVisibleOnAllWorkspaces` 로 위젯 고정
+- 위젯 고정: `alwaysOnTop: true` (생성 옵션) + `setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })` + `setAlwaysOnTop(true, 'floating')` (macOS level 지정 필수 — 미지정 시 fullscreen/Spaces 전환에서 소멸)
 - 회의실 AI 응답은 순차 스트리밍 (동시 아님, UX 혼란 방지)
 - API 키는 electron-store로 암호화 저장
 - 캐릭터별 system prompt는 config/default-agents.json에서 관리
+- **VSCode/Claude Code에서 실행 시**: `ELECTRON_RUN_AS_NODE=1` 환경변수 충돌 주의
+  - package.json에 `env -u ELECTRON_RUN_AS_NODE electron .` 적용 완료
+  - 이 변수가 설정된 상태로 `electron .` 실행 시 `app is undefined` 오류 발생

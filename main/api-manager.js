@@ -11,17 +11,43 @@ const DEFAULT_MODELS = {
     google: 'gemini-2.0-flash',
     ollama: 'llama-3',
 };
-function normalizeMessages(messages = []) {
+function normalizeMessages(messages = [], maxMessages = 40) {
     if (!Array.isArray(messages)) {
         return [];
     }
-    return messages
+    const normalized = messages
         .filter((message) => message && (message.role === 'user' || message.role === 'assistant'))
         .map((message) => ({
             role: message.role,
             content: typeof message.content === 'string' ? message.content : '',
         }))
         .filter((message) => message.content.length > 0);
+
+    const safeMax = Number.isFinite(maxMessages) ? Math.max(1, Math.floor(maxMessages)) : 40;
+    if (normalized.length <= safeMax) {
+        return normalized;
+    }
+
+    const firstUserIndex = normalized.findIndex((message) => message.role === 'user');
+    const sliced = normalized.slice(-safeMax);
+    if (firstUserIndex < 0) {
+        return sliced;
+    }
+    if (firstUserIndex >= normalized.length - safeMax) {
+        return sliced;
+    }
+
+    const firstUser = normalized[firstUserIndex];
+    const tailCount = Math.max(0, safeMax - 1);
+    const tail = tailCount === 0 ? [] : normalized.slice(-tailCount);
+    let merged = [firstUser, ...tail];
+    while (merged.length > safeMax) {
+        merged = merged.slice(1);
+    }
+    while (merged.length > 0 && merged[0].role !== 'user') {
+        merged = merged.slice(1);
+    }
+    return merged;
 }
 function getApiKey(provider) {
     const keyName = API_KEY_MAP[provider];
@@ -234,23 +260,36 @@ async function streamFromGoogle(model, persona, messages, onChunk) {
     });
 }
 async function streamFromOllama(model, persona, messages, onChunk) {
-    const response = await fetch('http://localhost:11434/api/chat', {
-        method: 'POST',
-        headers: {
-            'content-type': 'application/json',
-        },
-        body: JSON.stringify({
-            model,
-            stream: true,
-            messages: [
-                ...(persona ? [{ role: 'system', content: persona }] : []),
-                ...messages.map((message) => ({
-                    role: message.role,
-                    content: message.content,
-                })),
-            ],
-        }),
-    });
+    let response;
+    try {
+        response = await fetch('http://localhost:11434/api/chat', {
+            method: 'POST',
+            headers: {
+                'content-type': 'application/json',
+            },
+            body: JSON.stringify({
+                model,
+                stream: true,
+                messages: [
+                    ...(persona ? [{ role: 'system', content: persona }] : []),
+                    ...messages.map((message) => ({
+                        role: message.role,
+                        content: message.content,
+                    })),
+                ],
+            }),
+        });
+    } catch (error) {
+        if (
+            error &&
+            error.name === 'TypeError' &&
+            typeof error.message === 'string' &&
+            error.message.toLowerCase().includes('fetch failed')
+        ) {
+            throw new Error('Ollama가 실행 중이지 않습니다. localhost:11434 서버를 확인해주세요.');
+        }
+        throw error;
+    }
     await ensureStreamableResponse(response, 'Ollama');
     await parseNdjsonStream(response, (payload) => {
         const chunk = payload?.message?.content;
@@ -259,13 +298,126 @@ async function streamFromOllama(model, persona, messages, onChunk) {
         }
     });
 }
+
+async function getOllamaModels() {
+    try {
+        const response = await fetch('http://localhost:11434/api/tags', {
+            method: 'GET',
+            headers: {
+                accept: 'application/json',
+            },
+        });
+        if (!response.ok) {
+            return [];
+        }
+        const payload = await response.json().catch(() => null);
+        const models = Array.isArray(payload?.models) ? payload.models : [];
+        return models
+            .map((model) => (typeof model?.name === 'string' ? model.name.trim() : ''))
+            .filter(Boolean);
+    } catch (_error) {
+        return [];
+    }
+}
+
+async function testAnthropicApiKey(apiKey) {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+            'content-type': 'application/json',
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+            model: DEFAULT_MODELS.anthropic,
+            max_tokens: 1,
+            messages: [{ role: 'user', content: 'ping' }],
+        }),
+    });
+
+    if (response.ok) {
+        return { ok: true };
+    }
+
+    const errorText = await response.text().catch(() => '');
+    return { ok: false, error: `Anthropic API 요청 실패 (${response.status}): ${errorText.slice(0, 160) || response.statusText}` };
+}
+
+async function testOpenAIApiKey(apiKey) {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+            'content-type': 'application/json',
+            authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+            model: DEFAULT_MODELS.openai,
+            max_tokens: 1,
+            messages: [{ role: 'user', content: 'ping' }],
+        }),
+    });
+
+    if (response.ok) {
+        return { ok: true };
+    }
+
+    const errorText = await response.text().catch(() => '');
+    return { ok: false, error: `OpenAI API 요청 실패 (${response.status}): ${errorText.slice(0, 160) || response.statusText}` };
+}
+
+async function testGoogleApiKey(apiKey) {
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(DEFAULT_MODELS.google)}:generateContent?key=${encodeURIComponent(apiKey)}`;
+    const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+            'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+            contents: [{ role: 'user', parts: [{ text: 'ping' }] }],
+            generationConfig: {
+                maxOutputTokens: 1,
+            },
+        }),
+    });
+
+    if (response.ok) {
+        return { ok: true };
+    }
+
+    const errorText = await response.text().catch(() => '');
+    return { ok: false, error: `Google API 요청 실패 (${response.status}): ${errorText.slice(0, 160) || response.statusText}` };
+}
+
+async function testApiKey(provider, key) {
+    const normalizedProvider = typeof provider === 'string' ? provider.trim().toLowerCase() : '';
+    const apiKey = typeof key === 'string' ? key.trim() : '';
+    if (!apiKey) {
+        return { ok: false, error: 'API 키가 비어 있습니다.' };
+    }
+
+    try {
+        if (normalizedProvider === 'anthropic') {
+            return await testAnthropicApiKey(apiKey);
+        }
+        if (normalizedProvider === 'openai') {
+            return await testOpenAIApiKey(apiKey);
+        }
+        if (normalizedProvider === 'google') {
+            return await testGoogleApiKey(apiKey);
+        }
+        return { ok: false, error: '지원하지 않는 provider입니다.' };
+    } catch (error) {
+        return { ok: false, error: error?.message || 'API 연결 테스트에 실패했습니다.' };
+    }
+}
+
 async function streamChat(provider, model, persona, messages, onChunk, onEnd, onError) {
     const safeOnChunk = typeof onChunk === 'function' ? onChunk : () => {};
     const safeOnEnd = typeof onEnd === 'function' ? onEnd : () => {};
     const safeOnError = typeof onError === 'function' ? onError : () => {};
     try {
         const normalizedProvider = typeof provider === 'string' ? provider.toLowerCase() : '';
-        const normalizedMessages = normalizeMessages(messages);
+        const normalizedMessages = normalizeMessages(messages, 40);
         const resolvedModel = model || DEFAULT_MODELS[normalizedProvider];
         if (!resolvedModel) {
             throw new Error('유효한 모델 정보가 없습니다.');
@@ -289,4 +441,6 @@ async function streamChat(provider, model, persona, messages, onChunk, onEnd, on
 }
 module.exports = {
     streamChat,
+    getOllamaModels,
+    testApiKey,
 };

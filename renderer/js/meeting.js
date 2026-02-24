@@ -35,6 +35,26 @@ function showToast(message) {
     }, 1800);
 }
 
+function renderSpeechMarkdown(content) {
+    if (typeof content !== 'string') {
+        return '';
+    }
+    if (typeof window.renderMarkdown === 'function') {
+        return window.renderMarkdown(content);
+    }
+    return content
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
+function applySpeechContent(contentEl, content) {
+    if (!contentEl) {
+        return;
+    }
+    contentEl.innerHTML = renderSpeechMarkdown(content);
+}
+
 function setRunning(isRunning) {
     meetingState.running = isRunning;
     const startButton = find('.btn-start-meeting');
@@ -78,6 +98,21 @@ function syncEmptyStateVisibility() {
     emptyState.style.display = hasItems ? 'none' : 'block';
 }
 
+function resetSpeechLog() {
+    const log = find('.speech-log');
+    const emptyState = find('.empty-state');
+
+    meetingState.streamingItemEl = null;
+    meetingState.streamingContentEl = null;
+
+    if (log) {
+        log.innerHTML = '';
+    }
+    if (emptyState) {
+        emptyState.style.display = 'block';
+    }
+}
+
 function findAgent(agentId) {
     return meetingState.agents.find((agent) => agent.id === agentId) || null;
 }
@@ -107,7 +142,11 @@ function appendSpeechItem(agentId, agentName, round, initialContent, streaming) 
 
     const content = document.createElement('div');
     content.className = 'speech-content';
-    content.textContent = initialContent || '';
+    if (streaming) {
+        content.textContent = initialContent || '';
+    } else {
+        applySpeechContent(content, initialContent || '');
+    }
 
     bubble.appendChild(content);
     item.appendChild(header);
@@ -181,8 +220,11 @@ function handleSpeakerEnd(data) {
         const inserted = appendSpeechItem(data?.agentId, '', 1, data?.content || '', false);
         meetingState.streamingItemEl = inserted.item;
         meetingState.streamingContentEl = inserted.content;
-    } else if ((meetingState.streamingContentEl.textContent || '').trim() === '' && data?.content) {
-        meetingState.streamingContentEl.textContent = data.content;
+    } else {
+        const finalContent = typeof data?.content === 'string'
+            ? data.content
+            : (meetingState.streamingContentEl.textContent || '');
+        applySpeechContent(meetingState.streamingContentEl, finalContent);
     }
 
     if (meetingState.streamingItemEl) {
@@ -190,6 +232,24 @@ function handleSpeakerEnd(data) {
     }
     meetingState.streamingItemEl = null;
     meetingState.streamingContentEl = null;
+}
+
+async function exportMeeting() {
+    if (!window.electronAPI?.exportMeeting) {
+        return;
+    }
+    try {
+        const result = await window.electronAPI.exportMeeting();
+        if (!result?.ok) {
+            if (result?.canceled) {
+                return;
+            }
+            throw new Error(result?.error || '회의록 저장 실패');
+        }
+        showToast('회의록을 저장했습니다.');
+    } catch (error) {
+        showToast(error.message || '회의록 저장 실패');
+    }
 }
 
 function handleMeetingEnded() {
@@ -220,6 +280,7 @@ async function startMeeting() {
         return;
     }
 
+    resetSpeechLog();
     setRunning(true);
     try {
         const result = await window.electronAPI.startMeeting(topic, participantIds, maxRounds);
@@ -246,6 +307,7 @@ async function stopMeeting() {
 function bindEvents() {
     const startButton = find('.btn-start-meeting');
     const stopButton = find('.btn-stop-meeting');
+    const exportButton = find('.btn-export');
     const closeButton = find('.btn-close');
 
     if (startButton) {
@@ -253,6 +315,9 @@ function bindEvents() {
     }
     if (stopButton) {
         stopButton.addEventListener('click', stopMeeting);
+    }
+    if (exportButton) {
+        exportButton.addEventListener('click', exportMeeting);
     }
     if (closeButton) {
         closeButton.addEventListener('click', () => window.close());
