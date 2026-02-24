@@ -112,14 +112,14 @@ npm test           # 테스트 실행
 
 ## Current Status
 - [x] Phase 0: 프로젝트 초기화 및 스캐폴딩 완료
-- [x] Phase 1: 1:1 채팅 기능 완료
+- [x] Phase 1: 1:1 채팅 기능 구현 완료
   - main.js (IPC 전체) / preload.js / agent-store / api-manager / window-manager
   - dashboard.html + dashboard.css (삼국지 테마) + dashboard.js (스트리밍 채팅)
   - widget.html 클릭 이벤트 연결
 - [x] Phase 1.5: API 키 설정 화면 완료
   - settings.html + settings.css + settings.js
   - widget.html ⚙️ 설정 버튼 추가
-- [x] Phase 2: 회의실 (다중 AI 토론) 완료
+- [x] Phase 2: 다중 AI 회의실 기능 구현 완료
   - [x] meeting.html + meeting.css (영자 완료)
   - [x] main/meeting-engine.js (번개 완료)
   - [x] renderer/js/meeting.js (번개 완료)
