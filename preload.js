@@ -1,0 +1,78 @@
+const { contextBridge, ipcRenderer } = require('electron');
+
+contextBridge.exposeInMainWorld('electronAPI', {
+    getAgents: () => ipcRenderer.invoke('get-agents'),
+    openDashboard: (agentId) => ipcRenderer.send('open-dashboard', agentId),
+    openMeetingRoom: () => ipcRenderer.send('open-meeting'),
+    openSettings: () => ipcRenderer.send('open-settings'),
+    quitApp: () => ipcRenderer.send('quit-app'),
+    startMeeting: (topic, participantIds, maxRounds) =>
+        ipcRenderer.invoke('start-meeting', { topic, participantIds, maxRounds }),
+    stopMeeting: () => ipcRenderer.invoke('stop-meeting'),
+    getMeetingState: () => ipcRenderer.invoke('get-meeting-state'),
+    sendMessage: (agentId, content) => ipcRenderer.invoke('send-message', { agentId, content }),
+    getAgent: (agentId) => ipcRenderer.invoke('get-agent', agentId),
+    getChatHistory: (agentId) => ipcRenderer.invoke('get-chat-history', agentId),
+    clearHistory: (agentId) => ipcRenderer.invoke('clear-history', agentId),
+    saveApiKey: (provider, key) => ipcRenderer.invoke('save-api-key', { provider, key }),
+    loadApiKeys: () => ipcRenderer.invoke('load-api-keys'),
+    onStreamChunk: (callback) => {
+        ipcRenderer.on('stream-chunk', (_event, data) => {
+            if (typeof callback === 'function') {
+                callback(data);
+            }
+        });
+    },
+    onStreamEnd: (callback) => {
+        ipcRenderer.on('stream-end', () => {
+            if (typeof callback === 'function') {
+                callback();
+            }
+        });
+    },
+    onStreamError: (callback) => {
+        ipcRenderer.on('stream-error', (_event, data) => {
+            if (typeof callback === 'function') {
+                callback(data);
+            }
+        });
+    },
+    removeStreamListeners: () => {
+        ipcRenderer.removeAllListeners('stream-chunk');
+        ipcRenderer.removeAllListeners('stream-end');
+        ipcRenderer.removeAllListeners('stream-error');
+    },
+    onMeetingSpeakerStart: (callback) => {
+        ipcRenderer.on('meeting-speaker-start', (_event, data) => {
+            if (typeof callback === 'function') {
+                callback(data);
+            }
+        });
+    },
+    onMeetingChunk: (callback) => {
+        ipcRenderer.on('meeting-chunk', (_event, data) => {
+            if (typeof callback === 'function') {
+                callback(data);
+            }
+        });
+    },
+    onMeetingSpeakerEnd: (callback) => {
+        ipcRenderer.on('meeting-speaker-end', (_event, data) => {
+            if (typeof callback === 'function') {
+                callback(data);
+            }
+        });
+    },
+    onMeetingEnded: (callback) => {
+        ipcRenderer.on('meeting-ended', () => {
+            if (typeof callback === 'function') {
+                callback();
+            }
+        });
+    },
+    removeMeetingListeners: () => {
+        ['meeting-speaker-start', 'meeting-chunk', 'meeting-speaker-end', 'meeting-ended'].forEach((channel) => {
+            ipcRenderer.removeAllListeners(channel);
+        });
+    },
+});

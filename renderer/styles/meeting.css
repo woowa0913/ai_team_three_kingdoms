@@ -1,0 +1,349 @@
+:root {
+    /* 기존 디자인 시스템 유지 */
+    --bg-overlay: rgba(20, 18, 18, 0.95);
+    --text-color: #ECECEC;
+    --text-muted: #8E8E93;
+    --accent-gold: #C9A84C;
+    --accent-crimson: #8B1A1A;
+    --border-color: rgba(255, 255, 255, 0.1);
+    --border-radius-base: 12px;
+    --hover-bg: rgba(255, 255, 255, 0.1);
+    --message-ai-bg: rgba(45, 45, 45, 0.85);
+}
+
+body,
+html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: transparent;
+    color: var(--text-color);
+    overflow: hidden;
+}
+
+.meeting-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background-color: var(--bg-overlay);
+    border: 1px solid var(--accent-gold);
+    border-radius: var(--border-radius-base);
+    box-sizing: border-box;
+}
+
+/* 1. Header */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    background-color: rgba(0, 0, 0, 0.6);
+    border-bottom: 1px solid var(--accent-gold);
+    -webkit-app-region: drag;
+}
+
+.title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--accent-gold);
+    margin: 0;
+}
+
+.meeting-status-badge {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-muted);
+}
+
+.meeting-status-badge.active {
+    background-color: rgba(139, 26, 26, 0.2);
+    color: #FF6B6B;
+    border: 1px solid var(--accent-crimson);
+}
+
+.header-actions {
+    -webkit-app-region: no-drag;
+}
+
+.icon-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 16px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.icon-btn:hover {
+    background-color: var(--hover-bg);
+    color: var(--text-color);
+}
+
+/* 2. Main Layout (Sidebar + Log) */
+.main-layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 260px;
+    background-color: rgba(0, 0, 0, 0.3);
+    border-right: 1px solid var(--border-color);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow-y: auto;
+}
+
+.settings-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.settings-group label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent-gold);
+}
+
+.meeting-topic-input {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 13px;
+    line-height: 1.5;
+    resize: none;
+    height: 60px;
+    font-family: inherit;
+    transition: border-color 0.2s;
+}
+
+.meeting-topic-input:focus {
+    outline: none;
+    border-color: var(--accent-gold);
+}
+
+.participant-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.participant-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--text-color);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 6px;
+}
+
+.participant-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.participant-item input[type="checkbox"] {
+    accent-color: var(--accent-crimson);
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.round-input {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 14px;
+    width: 60px;
+    outline: none;
+}
+
+.round-input:focus {
+    border-color: var(--accent-gold);
+}
+
+.sidebar-actions {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-top: 20px;
+}
+
+.btn-start-meeting,
+.btn-stop-meeting {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-start-meeting {
+    background-color: var(--accent-gold);
+    color: #111;
+}
+
+.btn-start-meeting:hover:not(:disabled) {
+    background-color: #D4B65B;
+    box-shadow: 0 0 10px rgba(201, 168, 76, 0.4);
+}
+
+.btn-start-meeting:disabled {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-muted);
+    cursor: not-allowed;
+}
+
+.btn-stop-meeting {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-color);
+}
+
+.btn-stop-meeting:hover:not(:disabled) {
+    background-color: rgba(139, 26, 26, 0.8);
+    color: white;
+}
+
+.btn-stop-meeting:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* 3. Speech Log Area */
+.log-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: rgba(15, 15, 15, 0.5);
+    position: relative;
+}
+
+.speech-log {
+    flex: 1;
+    padding: 24px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.speech-log::-webkit-scrollbar {
+    width: 6px;
+}
+
+.speech-log::-webkit-scrollbar-thumb {
+    background-color: rgba(201, 168, 76, 0.3);
+    border-radius: 10px;
+}
+
+.empty-state {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--text-muted);
+    font-size: 14px;
+    text-align: center;
+}
+
+/* Speech Item 💬 */
+.speech-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.speech-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--accent-gold);
+    font-weight: 500;
+}
+
+.speech-bubble {
+    background-color: var(--message-ai-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 4px var(--border-radius-base) var(--border-radius-base) var(--border-radius-base);
+    padding: 16px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-color);
+    align-self: flex-start;
+    max-width: 90%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.speech-content p {
+    margin: 0 0 8px 0;
+}
+
+.speech-content p:last-child {
+    margin: 0;
+}
+
+/* Streaming Cursor Effect */
+.speech-item.streaming .speech-content::after {
+    content: "▌";
+    display: inline-block;
+    vertical-align: bottom;
+    margin-left: 4px;
+    color: var(--accent-gold);
+    animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0;
+    }
+}

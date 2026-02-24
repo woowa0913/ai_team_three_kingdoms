@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>설정</title>
+    <link rel="stylesheet" href="styles/settings.css">
+</head>
+
+<body>
+    <div class="settings-container">
+
+        <!-- [1] 헤더 -->
+        <header class="header">
+            <h1 class="title">⚙️ API 키 설정</h1>
+            <p class="subtitle">AI와 대화하려면 각 서비스의 API 키를 입력하세요.</p>
+        </header>
+
+        <!-- [2] API 키 입력 폼 영역 -->
+        <main class="content">
+
+            <!-- Anthropic -->
+            <div class="provider-card" data-provider="anthropic">
+                <div class="provider-header">
+                    <span class="emoji">🟣</span>
+                    <span class="provider-label">Anthropic (Claude)</span>
+                </div>
+                <div class="input-group">
+                    <input type="password" class="api-key-input" placeholder="sk-ant-api03-...">
+                    <button type="button" class="btn-toggle-visibility" title="비밀번호 보이기">👁️</button>
+                </div>
+            </div>
+
+            <!-- OpenAI -->
+            <div class="provider-card" data-provider="openai">
+                <div class="provider-header">
+                    <span class="emoji">🟢</span>
+                    <span class="provider-label">OpenAI (GPT)</span>
+                </div>
+                <div class="input-group">
+                    <input type="password" class="api-key-input" placeholder="sk-... ">
+                    <button type="button" class="btn-toggle-visibility" title="비밀번호 보이기">👁️</button>
+                </div>
+            </div>
+
+            <!-- Google Gemini -->
+            <div class="provider-card" data-provider="google">
+                <div class="provider-header">
+                    <span class="emoji">🔵</span>
+                    <span class="provider-label">Google (Gemini)</span>
+                </div>
+                <div class="input-group">
+                    <input type="password" class="api-key-input" placeholder="AIzaSy...">
+                    <button type="button" class="btn-toggle-visibility" title="비밀번호 보이기">👁️</button>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- [3] 하단 버튼 -->
+        <footer class="footer">
+            <button type="button" class="btn-cancel">취소</button>
+            <button type="button" class="btn-save">저장하기</button>
+        </footer>
+
+    </div>
+
+    <!-- 번개 스크립트 파일 연동 -->
+    <script src="js/settings.js"></script>
+</body>
+
+</html>

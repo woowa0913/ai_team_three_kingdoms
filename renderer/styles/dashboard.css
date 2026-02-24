@@ -1,0 +1,387 @@
+:root {
+    /* 위젯 공통 속성 유지 확장 */
+    --bg-color: rgba(30, 30, 30, 0.85);
+    --border-color: rgba(255, 255, 255, 0.1);
+    --text-color: #ECECEC;
+    --hover-bg: rgba(255, 255, 255, 0.1);
+
+    /* 대시보드 (삼국지 전장의 장막 테마) 확장 토큰 */
+    --bg-overlay: rgba(20, 18, 18, 0.95);
+    --text-muted: #8E8E93;
+    --accent-gold: #C9A84C;
+    --accent-crimson: #8B1A1A;
+
+    --message-user-bg: rgba(139, 26, 26, 0.65);
+    --message-ai-bg: rgba(45, 45, 45, 0.85);
+
+    --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --border-radius-base: 12px;
+    --border-radius-bubble: 16px;
+}
+
+body,
+html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    font-family: var(--font-family);
+    background-color: transparent;
+    /* Electron 투명 창 지원을 위함 */
+    color: var(--text-color);
+    overflow: hidden;
+}
+
+/* 전체 래퍼 */
+.dashboard-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background-color: var(--bg-overlay);
+    border: 1px solid var(--accent-gold);
+    box-sizing: border-box;
+    /* Electron 창 자체 설정에 따라 깎이므로 선택적 적용 */
+    position: relative;
+}
+
+/* 1. Header 영역 */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background-color: rgba(0, 0, 0, 0.4);
+    border-bottom: 1px solid var(--accent-gold);
+    -webkit-app-region: drag;
+    /* Electron 드래그 영역 설정 */
+}
+
+.header-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.agent-emoji {
+    font-size: 28px;
+    background: var(--hover-bg);
+    padding: 8px;
+    border-radius: 50%;
+    border: 1px solid rgba(201, 168, 76, 0.3);
+}
+
+.agent-name-wrap {
+    display: flex;
+    flex-direction: column;
+}
+
+.agent-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--accent-gold);
+    margin-bottom: 2px;
+}
+
+.model-name {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.header-actions {
+    display: flex;
+    gap: 10px;
+    -webkit-app-region: no-drag;
+}
+
+.icon-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+    transition: all 0.2s;
+    font-size: 16px;
+}
+
+.icon-btn:hover {
+    background: var(--hover-bg);
+    color: var(--text-color);
+}
+
+/* 2. Chat Messages 영역 */
+.chat-messages {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* 스크롤바 커스텀 */
+.chat-messages::-webkit-scrollbar {
+    width: 6px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+    background-color: rgba(201, 168, 76, 0.3);
+    border-radius: 10px;
+}
+
+/* 메시지 공통 */
+.message {
+    display: flex;
+    flex-direction: column;
+    max-width: 80%;
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.message-content {
+    padding: 12px 16px;
+    font-size: 14px;
+    line-height: 1.5;
+    word-break: break-word;
+}
+
+.message-timestamp {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 6px;
+}
+
+/* 유저 메시지 */
+.message.user {
+    align-self: flex-end;
+}
+
+.message.user .message-content {
+    background-color: var(--message-user-bg);
+    border: 1px solid var(--accent-crimson);
+    border-radius: var(--border-radius-bubble) var(--border-radius-bubble) 4px var(--border-radius-bubble);
+    color: #fff;
+}
+
+.message.user .message-timestamp {
+    text-align: right;
+}
+
+/* AI(Assistant) 메시지 */
+.message.assistant {
+    align-self: flex-start;
+}
+
+.message.assistant .message-content {
+    background-color: var(--message-ai-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-bubble) var(--border-radius-bubble) var(--border-radius-bubble) 4px;
+}
+
+/* 스트리밍 효과 */
+.message.streaming .message-content::after {
+    content: "▌";
+    display: inline-block;
+    vertical-align: bottom;
+    margin-left: 4px;
+    color: var(--accent-gold);
+    animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0;
+    }
+}
+
+/* 3. Input 영역 */
+.input-container {
+    padding: 16px 20px;
+    background-color: rgba(0, 0, 0, 0.4);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+}
+
+.message-input {
+    flex: 1;
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    border-radius: var(--border-radius-base);
+    padding: 12px 16px;
+    font-size: 14px;
+    resize: none;
+    min-height: 20px;
+    max-height: 120px;
+    font-family: inherit;
+    transition: border-color 0.2s;
+}
+
+.message-input:focus {
+    outline: none;
+    border-color: var(--accent-gold);
+}
+
+.message-input::placeholder {
+    color: var(--text-muted);
+}
+
+.btn-send {
+    background-color: var(--accent-crimson);
+    color: #fff;
+    border: none;
+    border-radius: var(--border-radius-base);
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-send:hover:not(:disabled) {
+    background-color: #a02020;
+    box-shadow: 0 0 10px rgba(139, 26, 26, 0.5);
+}
+
+.btn-send:disabled {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-muted);
+    cursor: not-allowed;
+}
+
+.btn-send svg {
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
+}
+
+/* API Key Warning */
+.api-key-warning {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(139, 26, 26, 0.15);
+    border-bottom: 1px solid var(--accent-crimson);
+    padding: 10px 20px;
+    font-size: 13px;
+    color: #FF6B6B;
+    flex-shrink: 0;
+}
+
+.api-key-warning .btn-open-settings {
+    background: transparent;
+    border: 1px solid var(--accent-crimson);
+    color: #FF6B6B;
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.api-key-warning .btn-open-settings:hover {
+    background: rgba(139, 26, 26, 0.3);
+}
+
+/* Tab Bar */
+.tab-bar {
+    display: flex;
+    gap: 4px;
+    padding: 12px 20px 0;
+    border-bottom: 1px solid var(--border-color);
+    background: rgba(0, 0, 0, 0.2);
+    flex-shrink: 0;
+}
+
+.tab-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 8px 14px;
+    border-radius: 8px 8px 0 0;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.tab-btn:hover {
+    color: var(--text-color);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.tab-btn.active {
+    color: var(--accent-gold);
+    border-bottom: 2px solid var(--accent-gold);
+}
+
+.tab-content {
+    display: none;
+    flex: 1;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.tab-content.active {
+    display: flex;
+}
+
+.persona-view {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    overflow-y: auto;
+}
+
+.persona-name {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--accent-gold);
+}
+
+.persona-desc {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text-muted);
+    white-space: pre-wrap;
+}
+
+.skills-view {
+    padding: 24px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-content: flex-start;
+    overflow-y: auto;
+}
+
+.skill-tag {
+    background: rgba(201, 168, 76, 0.15);
+    border: 1px solid rgba(201, 168, 76, 0.3);
+    color: var(--accent-gold);
+    font-size: 12px;
+    padding: 6px 14px;
+    border-radius: 20px;
+}

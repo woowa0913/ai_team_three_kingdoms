@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>작전 회의실</title>
+    <link rel="stylesheet" href="styles/meeting.css">
+    <!-- Toast 팝업용 기본 스타일 (dashboard와 동일) -->
+    <style>
+        .toast {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(139, 26, 26, 0.9);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            z-index: 1000;
+            font-size: 14px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .toast.visible {
+            opacity: 1;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="meeting-container">
+
+        <!-- [1] Header -->
+        <header class="header">
+            <div class="title-wrap">
+                <h1 class="title">⚔️ 작전 회의실</h1>
+                <span class="meeting-status-badge">⚫ 대기 중</span>
+                <!-- 회의 진행 중일 때 클래스를 'active'로 토글하고 텍스트를 '🔴 회의 진행 중'으로 변경 -->
+            </div>
+            <div class="header-actions">
+                <button class="icon-btn btn-close" title="닫기">❌</button>
+            </div>
+        </header>
+
+        <!-- [2] Main Layout -->
+        <div class="main-layout">
+
+            <!-- 왼쪽 사이드바 (회의 설정) -->
+            <aside class="sidebar">
+
+                <div class="settings-group">
+                    <label>📜 회의 주제</label>
+                    <textarea class="meeting-topic-input" placeholder="어떤 전략을 논의하시겠습니까?"></textarea>
+                </div>
+
+                <div class="settings-group">
+                    <label>⚔️ 참석자 (AI)</label>
+                    <div class="participant-list">
+                        <!-- 더미 데이터 (JS가 실제 agentData 기반으로 렌더링 할 영역) -->
+                        <label class="participant-item">
+                            <input type="checkbox" checked data-agent-id="agent-1"> 🪭 제갈량
+                        </label>
+                        <label class="participant-item">
+                            <input type="checkbox" checked data-agent-id="agent-2"> 🔥 주유
+                        </label>
+                        <label class="participant-item">
+                            <input type="checkbox" checked data-agent-id="agent-3"> 🐉 관우
+                        </label>
+                        <label class="participant-item">
+                            <input type="checkbox" data-agent-id="agent-4"> 🐍 장비
+                        </label>
+                        <label class="participant-item">
+                            <input type="checkbox" data-agent-id="agent-5"> 🐺 사마의
+                        </label>
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <label>🔄 라운드 수</label>
+                    <input type="number" class="round-input" min="1" max="10" value="3">
+                </div>
+
+                <!-- 하단 시작/중단 버튼 -->
+                <div class="sidebar-actions">
+                    <button type="button" class="btn-start-meeting">▶ 회의 시작</button>
+                    <button type="button" class="btn-stop-meeting" disabled>⏹ 중단</button>
+                </div>
+
+            </aside>
+
+            <!-- 오른쪽 메인 영역 (발언 기록) -->
+            <main class="log-area">
+                <!-- 더미 안내 문구 (회의 시작하면 hide) -->
+                <div class="empty-state">회의를 시작하면 발언이 여기에 표시됩니다.</div>
+
+                <div class="speech-log" id="speech-log">
+                    <!-- 실제 발언 데이터가 JS에 의해 여기에 동적으로 추가됩니다 -->
+                </div>
+            </main>
+
+        </div>
+    </div>
+
+    <!-- 번개 스크립트 연결 -->
+    <script src="js/meeting.js"></script>
+</body>
+
+</html>

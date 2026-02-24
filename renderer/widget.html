@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Orchestra Widget</title>
+  <link rel="stylesheet" href="styles/widget.css">
+</head>
+
+<body>
+  <div class="widget-container">
+    <div id="agent-list" class="agent-list">
+      <!-- Agent Icons will be rendered here dynamically -->
+      <div class="loading">Agents Loading...</div>
+    </div>
+    <div class="actions">
+      <button id="btn-meeting" class="icon-button btn-meeting" title="작전 회의실">👥</button>
+      <button id="btn-settings" class="icon-button btn-settings" title="설정">⚙️</button>
+      <button id="btn-quit" class="icon-button btn-quit" title="앱 종료">❌</button>
+    </div>
+  </div>
+
+  <script>
+    // Refined render logic based on the new transparent app-icon design 
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const agents = await window.electronAPI.getAgents();
+        const agentListEl = document.getElementById('agent-list');
+        agentListEl.innerHTML = ''; // Clear loading
+
+        agents.forEach(agent => {
+          // 1. 전체 컨테이너
+          const agentWrapper = document.createElement('div');
+          agentWrapper.className = 'agent-item';
+
+          // 2. 앱 아이콘 영역 (박스)
+          const agentIcon = document.createElement('div');
+          agentIcon.className = 'agent-icon';
+          agentIcon.title = agent.name;
+
+          const emojiSpan = document.createElement('span');
+          emojiSpan.className = 'emoji';
+          emojiSpan.textContent = agent.emoji || '🤖';
+
+          const badgeSpan = document.createElement('div');
+          badgeSpan.className = 'status-badge';
+          badgeSpan.textContent = '⚫ 대기 중'; // 기본 상태
+
+          agentIcon.appendChild(emojiSpan);
+          agentIcon.appendChild(badgeSpan);
+
+          // 3. 텍스트 정보 영역 (이름, 역할)
+          const agentInfo = document.createElement('div');
+          agentInfo.className = 'agent-info';
+
+          const nameDiv = document.createElement('div');
+          nameDiv.className = 'agent-name';
+          nameDiv.textContent = agent.name;
+
+          const roleDiv = document.createElement('div');
+          roleDiv.className = 'agent-role';
+          roleDiv.textContent = agent.expertise ? agent.expertise.split(',')[0] : '에이전트';
+
+          agentInfo.appendChild(nameDiv);
+          agentInfo.appendChild(roleDiv);
+
+          // 합치기
+          agentWrapper.appendChild(agentIcon);
+          agentWrapper.appendChild(agentInfo);
+
+          // 클릭 이벤트 (대시보드 열기)
+          agentWrapper.addEventListener('click', () => {
+            // 클릭하면 활성 상태로 뱃지 모양 변경 스크립트 등 나중에 추가 가능
+            badgeSpan.textContent = '🟢 업무 중';
+            badgeSpan.classList.add('active');
+            window.electronAPI.openDashboard(agent.id);
+          });
+
+          agentListEl.appendChild(agentWrapper);
+        });
+
+      } catch (error) {
+        console.error('Failed to load agents:', error);
+        document.getElementById('agent-list').innerHTML = '<div class="error">Load Error</div>';
+      }
+
+      document.getElementById('btn-settings').addEventListener('click', () => {
+        if (window.electronAPI && window.electronAPI.openSettings) {
+          window.electronAPI.openSettings();
+        }
+      });
+
+      document.getElementById('btn-meeting').addEventListener('click', () => {
+        if (window.electronAPI && window.electronAPI.openMeetingRoom) {
+          window.electronAPI.openMeetingRoom();
+        }
+      });
+
+      document.getElementById('btn-quit').addEventListener('click', () => {
+        if (window.electronAPI && window.electronAPI.quitApp) {
+          window.electronAPI.quitApp();
+        }
+      });
+    });
+  </script>
+</body>
+
+</html>

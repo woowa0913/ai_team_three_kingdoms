@@ -1,0 +1,35 @@
+{
+    "name": "ai-orchestra",
+    "version": "1.0.0",
+    "description": "macOS Desktop AI Orchestration Widget",
+    "main": "main.js",
+    "scripts": {
+        "start": "electron .",
+        "dev": "electron . --dev",
+        "build": "electron-builder build --mac",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "devDependencies": {
+        "electron": "^34.0.0",
+        "electron-builder": "^25.0.0"
+    },
+    "author": "AI Solopreneur",
+    "license": "MIT",
+    "build": {
+        "appId": "com.solopreneur.aiorchestra",
+        "mac": {
+            "category": "public.app-category.productivity",
+            "target": "dmg",
+            "icon": "build/icon.icns"
+        },
+        "files": [
+            "**/*",
+            "!node_modules/.cache",
+            "!docs",
+            "!.claude"
+        ]
+    },
+    "dependencies": {
+        "electron-store": "^7.0.3"
+    }
+}

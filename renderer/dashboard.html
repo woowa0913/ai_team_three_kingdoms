@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Orchestra - 대시보드</title>
+    <link rel="stylesheet" href="styles/dashboard.css">
+    <!-- Toast 팝업용 기본 스타일 추가 -->
+    <style>
+        .toast {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(139, 26, 26, 0.9);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            z-index: 1000;
+            font-size: 14px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .toast.visible {
+            opacity: 1;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <!-- 헤더 영역 -->
+        <header class="header">
+            <div class="header-info">
+                <div class="agent-emoji" data-agent-emoji>🪭</div>
+                <div class="agent-name-wrap">
+                    <div class="agent-name" data-agent-name>로딩 중...</div>
+                    <div class="model-name" data-agent-model>모델 정보 불러오는 중...</div>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="icon-btn btn-clear" title="대화 초기화">🗑️</button>
+                <button class="icon-btn btn-close" title="닫기">❌</button>
+            </div>
+        </header>
+
+        <!-- API 키 미설정 경고 배너 -->
+        <div class="api-key-warning" id="api-key-warning" style="display:none">
+            ⚠️ API 키가 설정되지 않았습니다.
+            <button class="btn-open-settings">설정 열기 →</button>
+        </div>
+
+        <!-- 탭 바 -->
+        <nav class="tab-bar">
+            <button class="tab-btn active" data-tab="chat">💬 채팅</button>
+            <button class="tab-btn" data-tab="persona">🎭 페르소나</button>
+            <button class="tab-btn" data-tab="skills">⚡ 능력/스킬</button>
+        </nav>
+
+        <!-- 채팅 탭 (기존 .chat-messages + 입력창을 이 div 안에 감쌈) -->
+        <div class="tab-content active" id="tab-chat">
+            <!-- 채팅 메시지 영역 -->
+            <main class="chat-messages" id="chat-messages">
+                <!-- dashboard.js가 동적으로 메시지 삽입 예정 -->
+            </main>
+
+            <!-- 입력 영역 -->
+            <footer class="input-container">
+                <textarea class="message-input" id="message-input" placeholder="지시를 내려주시옵소서... (Shift+Enter로 줄바꿈)"
+                    rows="1"></textarea>
+
+                <button class="btn-send" id="btn-send" disabled title="메시지 전송">
+                    <!-- 종이비행기/전송 아이콘 SVG -->
+                    <svg viewBox="0 0 24 24">
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
+                    </svg>
+                </button>
+            </footer>
+        </div>
+
+        <!-- 페르소나 탭 -->
+        <div class="tab-content" id="tab-persona">
+            <div class="persona-view">
+                <div class="persona-name" id="persona-name"></div>
+                <div class="persona-desc" id="persona-desc"></div>
+            </div>
+        </div>
+
+        <!-- 능력/스킬 탭 -->
+        <div class="tab-content" id="tab-skills">
+            <div class="skills-view">
+                <div class="skill-tag" id="expertise-text"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 코덱스가 짠 로직 파일 연결 -->
+    <script src="js/dashboard.js"></script>
+</body>
+
+</html>
