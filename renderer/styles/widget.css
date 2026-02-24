@@ -169,6 +169,11 @@ body {
   filter: grayscale(1);
 }
 
+.btn-hide-widget {
+  border-color: rgba(201, 168, 76, 0.5);
+  color: var(--accent-gold);
+}
+
 /* Utilities */
 .loading {
   font-size: 14px;

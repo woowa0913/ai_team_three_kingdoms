@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, screen } = require('electron');
+const { app, BrowserWindow, ipcMain, screen, Tray, nativeImage } = require('electron');
 const path = require('path');
 const Store = require('electron-store');
 const { createDashboardWindow, createSettingsWindow, createMeetingWindow } = require('./main/window-manager');
@@ -7,9 +7,31 @@ const apiManager = require('./main/api-manager');
 const meetingEngine = require('./main/meeting-engine');
 const store = new Store();
 let widgetWindow;
+let tray;
 let meetingSessionId = 0;
 let meetingSender = null;
 let isMeetingLoopRunning = false;
+
+function createTrayIcon() {
+    if (tray) {
+        return tray;
+    }
+
+    const iconDataUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAM1BMVEUAAP/////n2rrFq2FqVVyCgYK4sW+7rFJrY2NnWlyqqqpTUE5nWlyromGNi1utn1Y8OjtNAAAAD3RSTlMA8A0e8PMxr6mhg3dQWx22AAAAQ0lEQVR4nGNgYGBkYmZhY2NnYGRiY2MHEkYGFiA2MDAwMHAwMjA0MQARRhYQYWBmYmFg4ODh4eHi4uLiQMSABAwAX4QDP9R4BMEAAAAASUVORK5CYII=';
+    const icon = nativeImage.createFromDataURL(iconDataUrl);
+    tray = new Tray(icon);
+    tray.setToolTip('AI Orchestra');
+    tray.on('click', () => {
+        if (!widgetWindow || widgetWindow.isDestroyed()) {
+            createWidgetWindow();
+            return;
+        }
+        widgetWindow.show();
+        widgetWindow.focus();
+    });
+
+    return tray;
+}
 function createWidgetWindow() {
     const { height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
     const windowHeight = 100;
@@ -110,6 +132,7 @@ async function runMeetingLoop(sessionId) {
 }
 app.whenReady().then(() => {
     createWidgetWindow();
+    createTrayIcon();
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {
             createWidgetWindow();
@@ -189,6 +212,12 @@ ipcMain.on('open-settings', () => {
 });
 ipcMain.on('open-meeting', () => {
     createMeetingWindow();
+});
+ipcMain.on('hide-widget', () => {
+    if (!widgetWindow || widgetWindow.isDestroyed()) {
+        return;
+    }
+    widgetWindow.hide();
 });
 ipcMain.on('quit-app', () => {
     app.quit();

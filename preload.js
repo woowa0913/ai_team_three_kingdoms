@@ -5,6 +5,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     openDashboard: (agentId) => ipcRenderer.send('open-dashboard', agentId),
     openMeetingRoom: () => ipcRenderer.send('open-meeting'),
     openSettings: () => ipcRenderer.send('open-settings'),
+    hideWidget: () => ipcRenderer.send('hide-widget'),
     quitApp: () => ipcRenderer.send('quit-app'),
     startMeeting: (topic, participantIds, maxRounds) =>
         ipcRenderer.invoke('start-meeting', { topic, participantIds, maxRounds }),
