@@ -141,6 +141,11 @@ npm test           # 테스트 실행
   - [x] C-1: 에이전트 수정 기능 — add-agent 창 편집 모드 겸용, updateAgent IPC 추가
   - [x] C-1: 위젯 에이전트 아이콘 우클릭 → 수정 창 열기
   - [x] C-2: Ollama 연결 실패 시 명확한 오류 메시지 ("localhost:11434 확인해주세요")
+- [x] Phase 2.8: 삼국지 치비(SD) 테마 디자인 개편 (영자, 2026-02-25)
+  - [x] Stitch MCP 기반 Chibi Chat Dashboard 시안 도출 및 에셋 확보
+  - [x] themes.css 전면 개편 (피치/크림/골드 파스텔 라운드 톤)
+  - [x] dashboard.css 오리엔탈 배경, 만두 모양 버튼, 라운드 말풍선 등 세부 적용 완료
+  - [x] widget.css 아이콘 및 버튼 원형(border-radius: 50%) 처리
 - [ ] Phase 3: E2E 통합 테스트 + 배포 준비
 
 ## Important Notes
