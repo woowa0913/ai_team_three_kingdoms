@@ -19,7 +19,7 @@
   --bg-input: rgba(255, 255, 255, 0.05);
   --bg-hover: rgba(244, 192, 37, 0.15);
   --hover-bg: var(--bg-hover);
-  --bg-icon: #2a2515;
+  --bg-icon: transparent;
 
   /* 테두리 */
   --border-color: rgba(244, 192, 37, 0.15);
@@ -76,6 +76,11 @@
   /* 설정 카드 */
   --card-bg: #2a2515;
   --card-border: rgba(244, 192, 37, 0.3);
+
+  /* 장막 서브메뉴 (다크) */
+  --submenu-bg: rgba(34, 30, 16, 0.88);
+  --submenu-border: rgba(244, 192, 37, 0.25);
+  --submenu-item-hover-bg: rgba(244, 192, 37, 0.14);
 }
 
 /* ─── 시스템 자동: 라이트 모드 (귀여운 복숭아/골드/크림 치비 테마) ─── */
@@ -89,7 +94,7 @@
     /* chibi-peach */
     --bg-input: #ffffff;
     --bg-hover: rgba(244, 192, 37, 0.15);
-    --bg-icon: #fff9f0;
+    --bg-icon: transparent;
 
     --border-color: rgba(244, 192, 37, 0.2);
     --border-icon: rgba(244, 192, 37, 0.3);
@@ -133,6 +138,11 @@
 
     --card-bg: #fff9f0;
     --card-border: rgba(244, 192, 37, 0.3);
+
+    /* 장막 서브메뉴 (라이트) */
+    --submenu-bg: rgba(255, 252, 242, 0.90);
+    --submenu-border: rgba(244, 192, 37, 0.30);
+    --submenu-item-hover-bg: rgba(244, 192, 37, 0.14);
   }
 }
 
@@ -143,7 +153,7 @@ html[data-theme="dark"] {
   --bg-tertiary: #332d19;
   --bg-input: rgba(255, 255, 255, 0.05);
   --bg-hover: rgba(244, 192, 37, 0.15);
-  --bg-icon: #2a2515;
+  --bg-icon: transparent;
 
   --border-color: rgba(244, 192, 37, 0.15);
   --border-icon: rgba(244, 192, 37, 0.2);
@@ -186,6 +196,11 @@ html[data-theme="dark"] {
 
   --card-bg: #2a2515;
   --card-border: rgba(244, 192, 37, 0.3);
+
+  /* 장막 서브메뉴 (다크 수동) */
+  --submenu-bg: rgba(34, 30, 16, 0.88);
+  --submenu-border: rgba(244, 192, 37, 0.25);
+  --submenu-item-hover-bg: rgba(244, 192, 37, 0.14);
 }
 
 /* ─── 수동 오버라이드: 라이트 ─── */
@@ -195,7 +210,7 @@ html[data-theme="light"] {
   --bg-tertiary: #ffe5d9;
   --bg-input: #ffffff;
   --bg-hover: rgba(244, 192, 37, 0.15);
-  --bg-icon: #fff9f0;
+  --bg-icon: transparent;
 
   --border-color: rgba(244, 192, 37, 0.2);
   --border-icon: rgba(244, 192, 37, 0.3);
@@ -238,4 +253,9 @@ html[data-theme="light"] {
 
   --card-bg: #fff9f0;
   --card-border: rgba(244, 192, 37, 0.3);
+
+  /* 장막 서브메뉴 (라이트 수동) */
+  --submenu-bg: rgba(255, 252, 242, 0.90);
+  --submenu-border: rgba(244, 192, 37, 0.30);
+  --submenu-item-hover-bg: rgba(244, 192, 37, 0.14);
 }

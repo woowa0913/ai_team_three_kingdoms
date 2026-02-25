@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Cute 2D Animal Thre Kingdoms</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
+
+        body {
+            font-family: 'Jua', sans-serif;
+            background-color: #f7f9fc;
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px;
+            color: #333;
+        }
+
+        h1 {
+            margin-bottom: 50px;
+            font-size: 2.2rem;
+            color: #4A4A4A;
+        }
+
+        .grid {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 1200px;
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 40px;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            width: 180px;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+        }
+
+        .card h3 {
+            margin: 20px 0 5px;
+            font-size: 1.3rem;
+            color: #2c3e50;
+        }
+
+        .card p {
+            margin: 0;
+            font-size: 1rem;
+            color: #7f8c8d;
+            text-align: center;
+        }
+
+        .svg-container {
+            width: 140px;
+            height: 140px;
+            background: #f0f4f8;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 4px solid #fff;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.08);
+            position: relative;
+        }
+
+        svg {
+            width: 85%;
+            height: 85%;
+            overflow: visible;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>🍎 짱 귀여운 삼국지 동물 친구들 🍎</h1>
+    <p style="margin-top: -30px; margin-bottom: 40px; color: #666; font-size: 1.1rem;">수염이나 갑옷을 빼고, 직관적이고 아주아주 귀여운
+        <b>동물/마스코트 형태</b>로 완전히 바꿨습니다!</p>
+
+    <div class="grid">
+        <!-- 제갈량 (Zhuge Liang) : 똑똑한 부엉이 모자 -->
+        <div class="card">
+            <div class="svg-container">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+                    <!-- 하얀 둥근 얼굴 -->
+                    <circle cx="50" cy="55" r="35" fill="#fdfdfd" />
+
+                    <!-- 볼터치 (핑크) -->
+                    <circle cx="28" cy="60" r="6" fill="#ffb6c1" opacity="0.8" />
+                    <circle cx="72" cy="60" r="6" fill="#ffb6c1" opacity="0.8" />
+
+                    <!-- 눈 (초롱초롱) -->
+                    <circle cx="35" cy="50" r="5" fill="#333" />
+                    <circle cx="65" cy="50" r="5" fill="#333" />
+                    <circle cx="36" cy="48" r="1.5" fill="#fff" />
+                    <circle cx="66" cy="48" r="1.5" fill="#fff" />
+
+                    <!-- 입 (냥이입) -->
+                    <path d="M 45 58 Q 50 62 55 58" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round" />
+
+                    <!-- 제갈량의 파란색 꼬마 모자 -->
+                    <path d="M 35 30 L 65 30 L 60 15 L 40 15 Z" fill="#3498db" stroke="#2980b9" stroke-width="2"
+                        stroke-linejoin="round" />
+                    <rect x="30" y="26" width="40" height="4" rx="2" fill="#2980b9" />
+
+                    <!-- 작은 부채 (머리 옆 장식처럼) -->
+                    <path d="M 75 40 C 90 30, 95 45, 85 55 Z" fill="#fff" stroke="#bdc3c7" stroke-width="1.5" />
+                    <line x1="85" y1="55" x2="80" y2="48" stroke="#bdc3c7" stroke-width="1.5" />
+                </svg>
+            </div>
+            <h3>제갈량</h3>
+            <p>총괄 오케스트레이터</p>
+        </div>
+
+        <!-- 주유 (Zhou Yu) : 붉은 리본 새 -->
+        <div class="card">
+            <div class="svg-container">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+                    <!-- 하얀 얼굴 -->
+                    <circle cx="50" cy="55" r="35" fill="#fff5f5" />
+
+                    <!-- 귀여운 붉은 머리칼 (삐죽) -->
+                    <path d="M 40 25 C 50 15, 60 15, 65 25 C 75 15, 85 30, 70 40 C 60 45, 45 40, 40 25"
+                        fill="#e74c3c" />
+
+                    <!-- 볼터치 -->
+                    <circle cx="28" cy="60" r="6" fill="#ffb6c1" opacity="0.8" />
+                    <circle cx="72" cy="60" r="6" fill="#ffb6c1" opacity="0.8" />
+
+                    <!-- 눈 (웃는 눈) -->
+                    <path d="M 30 50 Q 35 45 40 50" fill="none" stroke="#333" stroke-width="2.5"
+                        stroke-linecap="round" />
+                    <path d="M 60 50 Q 65 45 70 50" fill="none" stroke="#333" stroke-width="2.5"
+                        stroke-linecap="round" />
+
+                    <!-- 입 (작은 미소) -->
+                    <path d="M 45 61 Q 50 65 55 61" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round" />
+
+                    <!-- 목의 빨간 나비 넥타이/리본 장식 (주유의 멋쟁이 포인트) -->
+                    <path d="M 50 78 L 40 70 L 40 86 Z" fill="#e74c3c" />
+                    <path d="M 50 78 L 60 70 L 60 86 Z" fill="#e74c3c" />
+                    <circle cx="50" cy="78" r="4" fill="#f1c40f" />
+                </svg>
+            </div>
+            <h3>주유</h3>
+            <p>미적인 UI 디자이너</p>
+        </div>
+
+        <!-- 관우 (Guan Yu) : 듬직한 초록 공룡상 -->
+        <div class="card">
+            <div class="svg-container">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+                    <!-- 둥근 얼굴 (초록 두건 대신 그냥 초록색 두건을 쓴 귀여운 캐릭터) -->
+                    <circle cx="50" cy="60" r="35" fill="#fdfdfd" />
+
+                    <!-- 초록색 후드/두건 덮어쓴 모양 -->
+                    <path d="M 15 60 C 15 20, 85 20, 85 60 C 85 40, 15 40, 15 60" fill="#2ecc71" />
+
+                    <!-- 너무 검은 수염 대신, 아주 귀여운 회갈색 볼따구 털 (다람쥐처럼) -->
+                    <path d="M 20 60 Q 15 75 25 80 Q 20 70 25 60 Z" fill="#e67e22" />
+                    <path d="M 80 60 Q 85 75 75 80 Q 80 70 75 60 Z" fill="#e67e22" />
+
+                    <!-- 볼터치 대신 작은 수줍은 선 -->
+                    <line x1="30" y1="65" x2="35" y2="65" stroke="#ffb6c1" stroke-width="2" stroke-linecap="round" />
+                    <line x1="65" y1="65" x2="70" y2="65" stroke="#ffb6c1" stroke-width="2" stroke-linecap="round" />
+
+                    <!-- 진지한데 귀여운 눈 -->
+                    <line x1="30" y1="50" x2="40" y2="52" stroke="#333" stroke-width="2.5" stroke-linecap="round" />
+                    <line x1="70" y1="50" x2="60" y2="52" stroke="#333" stroke-width="2.5" stroke-linecap="round" />
+
+                    <!-- 야무진 입 ('ㅅ' 형태) -->
+                    <path d="M 46 60 L 50 57 L 54 60" fill="none" stroke="#333" stroke-width="1.5"
+                        stroke-linejoin="round" />
+
+                    <!-- 머리 위 사과 꼭지 같은 작은 장식 (청룡언월도 느낌 대체) -->
+                    <path d="M 50 25 C 45 15, 55 10, 50 5" fill="none" stroke="#a0aec0" stroke-width="3"
+                        stroke-linecap="round" />
+                </svg>
+            </div>
+            <h3>관우</h3>
+            <p>믿음직한 백/프론트 개발</p>
+        </div>
+
+        <!-- 장비 (Zhang Fei) : 까만 삐죽머리 말썽꾸러기 -->
+        <div class="card">
+            <div class="svg-container">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+                    <!-- 까만 별모양/성게모양 삐죽 머리카락 (뒷배경) -->
+                    <path
+                        d="M 50 15 L 60 25 L 75 15 L 75 30 L 90 35 L 75 45 L 85 60 L 70 55 L 65 75 L 50 60 L 35 75 L 30 55 L 15 60 L 25 45 L 10 35 L 25 30 L 25 15 L 40 25 Z"
+                        fill="#34495e" />
+
+                    <!-- 동그란 빵빵한 맨얼굴 -->
+                    <circle cx="50" cy="55" r="30" fill="#fdfdfd" />
+
+                    <!-- 볼터치 (아주 크고 빨갛게 흥분상태) -->
+                    <circle cx="30" cy="58" r="8" fill="#ff7675" opacity="0.6" />
+                    <circle cx="70" cy="58" r="8" fill="#ff7675" opacity="0.6" />
+
+                    <!-- 땡그랗게 놀란/화난 눈 -->
+                    <circle cx="35" cy="45" r="7" fill="#fff" stroke="#333" stroke-width="1.5" />
+                    <circle cx="65" cy="45" r="7" fill="#fff" stroke="#333" stroke-width="1.5" />
+                    <circle cx="35" cy="45" r="2.5" fill="#333" />
+                    <circle cx="65" cy="45" r="2.5" fill="#333" />
+
+                    <!-- 화난 눈썹 -->
+                    <line x1="25" y1="35" x2="42" y2="40" stroke="#333" stroke-width="2.5" stroke-linecap="round" />
+                    <line x1="75" y1="35" x2="58" y2="40" stroke="#333" stroke-width="2.5" stroke-linecap="round" />
+
+                    <!-- 동그랗게 벌린 입 O -->
+                    <circle cx="50" cy="62" r="5" fill="#e74c3c" />
+                </svg>
+            </div>
+            <h3>장비</h3>
+            <p>버그 잡는 맹장 디버거</p>
+        </div>
+
+        <!-- 사마의 (Sima Yi) : 보라색 음흉한 아기 늑대 -->
+        <div class="card">
+            <div class="svg-container">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+                    <!-- 약간 뾰족한 얼굴 (여우상) -->
+                    <path d="M 20 40 C 30 15, 70 15, 80 40 C 90 70, 50 85, 50 85 C 50 85, 10 70, 20 40 Z"
+                        fill="#fdfdfd" />
+
+                    <!-- 보라색 귀 -->
+                    <path d="M 20 40 L 15 15 L 35 30 Z" fill="#9b59b6" />
+                    <path d="M 80 40 L 85 15 L 65 30 Z" fill="#9b59b6" />
+
+                    <!-- 볼터치 옅게 -->
+                    <circle cx="35" cy="60" r="5" fill="#ffb6c1" opacity="0.5" />
+                    <circle cx="65" cy="60" r="5" fill="#ffb6c1" opacity="0.5" />
+
+                    <!-- 음흉하게 반쯤 감은 눈 -->
+                    <path d="M 30 50 Q 35 47 40 52" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round" />
+                    <path d="M 70 50 Q 65 47 60 52" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round" />
+                    <path d="M 32 50 L 37 49 L 35 51 Z" fill="#333" />
+                    <path d="M 68 50 L 63 49 L 65 51 Z" fill="#333" />
+
+                    <!-- 한쪽 꼬리 올라간 미소 -->
+                    <path d="M 45 65 Q 50 67 55 63" fill="none" stroke="#333" stroke-width="1.5"
+                        stroke-linecap="round" />
+
+                    <!-- 이마에 다이아몬드 표식 -->
+                    <polygon points="50,25 55,30 50,35 45,30" fill="#f1c40f" />
+                </svg>
+            </div>
+            <h3>사마의</h3>
+            <p>로컬 데이터 보안 관리</p>
+        </div>
+
+    </div>
+
+</body>
+
+</html>

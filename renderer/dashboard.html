@@ -25,6 +25,13 @@
                 </div>
             </div>
             <div class="header-actions">
+                <button class="icon-btn btn-delete-agent-header" id="btn-delete-agent-header" title="에이전트 삭제" hidden>🗑 삭제</button>
+                <button class="icon-btn btn-settings-header" id="btn-settings-header" title="설정">⚙️ 설정</button>
+                <button class="icon-btn btn-add-agent-header" id="btn-add-agent-header" title="에이전트 추가">＋ 추가</button>
+                <label class="opacity-control" for="opacity-slider" title="창 투명도">
+                    <span class="opacity-icon">◐</span>
+                    <input type="range" id="opacity-slider" min="20" max="100" value="100" />
+                </label>
                 <button class="icon-btn btn-export" title="대화 내보내기">📥</button>
                 <button class="icon-btn btn-clear" title="대화 초기화">🗑️</button>
                 <button class="icon-btn btn-close" title="닫기">❌</button>
@@ -111,6 +118,8 @@
 
     <script src="js/theme.js"></script>
     <script src="js/markdown.js"></script>
+    <script src="js/dashboard-chat.js"></script>
+    <script src="js/dashboard-persona.js"></script>
     <script src="js/dashboard.js"></script>
 </body>
 

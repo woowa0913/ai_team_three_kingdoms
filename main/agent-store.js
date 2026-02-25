@@ -1,54 +1,33 @@
 const path = require('path');
 const Store = require('electron-store');
+const { createChatHistoryApi } = require('./chat-history');
+const { getStoreOptions } = require('./store-config');
+const { loadAndMigrateAgents } = require('./store-migration');
+const { validateAgentPayload, normalizeOptionalString } = require('./store-utils');
 
-const store = new Store();
+const store = new Store(getStoreOptions());
 const defaultAgents = require(path.join(__dirname, '..', 'config', 'default-agents.json'));
 const DEFAULT_PROTECTED_AGENT_ID = 'agent-1';
+const chatHistory = createChatHistoryApi(store);
 
-function cloneAgent(agent) {
-    return { ...agent };
-}
-
-function seedDefaultAgents() {
-    const seeded = defaultAgents.map(cloneAgent);
-    store.set('agents', seeded);
-    return seeded;
-}
-
-function mergeWithDefaults(storedAgents) {
-    const byId = new Map();
-    storedAgents.forEach((agent) => {
-        if (agent && typeof agent.id === 'string') {
-            byId.set(agent.id, { ...agent });
-        }
-    });
-
-    const merged = [];
-    defaultAgents.forEach((agent) => {
-        const current = byId.get(agent.id);
-        merged.push(current ? { ...agent, ...current } : cloneAgent(agent));
-        byId.delete(agent.id);
-    });
-
-    byId.forEach((agent) => {
-        merged.push({ ...agent });
-    });
-
-    return merged;
+function normalizeAgentApiKey(value) {
+    return typeof value === 'string' ? value.trim() : '';
 }
 
 function getAgents() {
-    const agents = store.get('agents');
-    if (!Array.isArray(agents)) {
-        return seedDefaultAgents();
+    const agents = loadAndMigrateAgents(store, defaultAgents);
+    let changed = false;
+    const normalized = agents.map((agent) => {
+        const apiKey = normalizeAgentApiKey(agent?.apiKey);
+        if (agent?.apiKey !== apiKey) {
+            changed = true;
+        }
+        return { ...agent, apiKey };
+    });
+    if (changed) {
+        store.set('agents', normalized);
     }
-
-    const merged = mergeWithDefaults(agents);
-    if (merged.length !== agents.length || JSON.stringify(merged) !== JSON.stringify(agents)) {
-        store.set('agents', merged);
-    }
-
-    return merged;
+    return normalized;
 }
 
 function getAgent(agentId) {
@@ -57,62 +36,6 @@ function getAgent(agentId) {
     }
 
     return getAgents().find((agent) => agent.id === agentId) || null;
-}
-
-function getChatHistoryKey(agentId) {
-    return `chat-history-${agentId}`;
-}
-
-function getChatHistory(agentId) {
-    if (!agentId) {
-        return [];
-    }
-
-    const history = store.get(getChatHistoryKey(agentId), []);
-    return Array.isArray(history) ? history : [];
-}
-
-function appendMessage(agentId, message) {
-    if (!agentId || !message) {
-        return getChatHistory(agentId);
-    }
-
-    const history = getChatHistory(agentId);
-    history.push(message);
-    store.set(getChatHistoryKey(agentId), history);
-    return history;
-}
-
-function clearHistory(agentId) {
-    if (!agentId) {
-        return;
-    }
-
-    store.set(getChatHistoryKey(agentId), []);
-}
-
-function validateAgentPayload(agentData = {}) {
-    const trimmed = {
-        name: typeof agentData.name === 'string' ? agentData.name.trim() : '',
-        emoji: typeof agentData.emoji === 'string' ? agentData.emoji.trim() : '🤖',
-        image: typeof agentData.image === 'string' ? agentData.image.trim() : '',
-        provider: typeof agentData.provider === 'string' ? agentData.provider.trim().toLowerCase() : '',
-        model: typeof agentData.model === 'string' ? agentData.model.trim() : '',
-        persona: typeof agentData.persona === 'string' ? agentData.persona.trim() : '',
-        expertise: typeof agentData.expertise === 'string' ? agentData.expertise.trim() : '',
-    };
-
-    if (!trimmed.name) {
-        throw new Error('에이전트 이름을 입력해주세요.');
-    }
-    if (!trimmed.provider) {
-        throw new Error('AI 제공자를 선택해주세요.');
-    }
-    if (!trimmed.model) {
-        throw new Error('모델명을 입력해주세요.');
-    }
-
-    return trimmed;
 }
 
 function addAgent(agentData) {
@@ -127,6 +50,7 @@ function addAgent(agentData) {
         model: validated.model,
         persona: validated.persona || `${validated.name} 에이전트입니다.`,
         expertise: validated.expertise || '일반 업무',
+        apiKey: validated.apiKey || '',
     };
 
     agents.push(created);
@@ -150,7 +74,7 @@ function deleteAgent(agentId) {
 
     const nextAgents = agents.filter((agent) => agent.id !== agentId);
     store.set('agents', nextAgents);
-    store.delete(getChatHistoryKey(agentId));
+    chatHistory.deleteHistory(agentId);
     return nextAgents;
 }
 
@@ -175,10 +99,6 @@ function updateAgentPersona(agentId, persona) {
     return updated;
 }
 
-function normalizeOptionalString(value) {
-    return typeof value === 'string' ? value.trim() : undefined;
-}
-
 function updateAgent(agentId, payload = {}) {
     if (!agentId) {
         throw new Error('agentId가 필요합니다.');
@@ -195,6 +115,7 @@ function updateAgent(agentId, payload = {}) {
     const emoji = normalizeOptionalString(payload.emoji);
     const model = normalizeOptionalString(payload.model);
     const expertise = normalizeOptionalString(payload.expertise);
+    const apiKey = normalizeOptionalString(payload.apiKey);
 
     if (name !== undefined && !name) {
         throw new Error('에이전트 이름을 입력해주세요.');
@@ -209,6 +130,7 @@ function updateAgent(agentId, payload = {}) {
         emoji: emoji !== undefined ? (emoji || '🤖') : (current.emoji || '🤖'),
         model: model !== undefined ? model : current.model,
         expertise: expertise !== undefined ? expertise : current.expertise,
+        apiKey: apiKey !== undefined ? (apiKey || '') : normalizeAgentApiKey(current.apiKey),
     };
 
     agents[index] = updated;
@@ -244,9 +166,9 @@ function reorderAgent(agentId, direction) {
 module.exports = {
     getAgents,
     getAgent,
-    getChatHistory,
-    appendMessage,
-    clearHistory,
+    getChatHistory: chatHistory.getChatHistory,
+    appendMessage: chatHistory.appendMessage,
+    clearHistory: chatHistory.clearHistory,
     addAgent,
     deleteAgent,
     updateAgentPersona,

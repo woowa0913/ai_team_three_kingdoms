@@ -1,38 +1,12 @@
 const statusBadgeByAgentId = new Map();
 
-function createDeleteButton(agent) {
-    if (agent.id === 'agent-1') {
-        return null;
+/* "제갈량 (오케스트레이터)" → { display: "제갈량", role: "오케스트레이터" } */
+function parseAgentName(fullName) {
+    const match = fullName.match(/^(.+?)\s*[(\(](.+?)[)\)]$/);
+    if (match) {
+        return { display: match[1].trim(), role: match[2].trim() };
     }
-
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'delete-btn';
-    button.title = `${agent.name} 삭제`;
-    button.textContent = '×';
-
-    button.addEventListener('click', async (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-
-        const confirmed = window.confirm(`${agent.name} 에이전트를 삭제할까요?`);
-        if (!confirmed) {
-            return;
-        }
-
-        try {
-            const result = await window.electronAPI.deleteAgent(agent.id);
-            if (!result?.ok) {
-                throw new Error(result?.error || '삭제 실패');
-            }
-            await renderAgents();
-        } catch (error) {
-            console.error('에이전트 삭제 실패:', error);
-            window.alert(error.message || '에이전트 삭제에 실패했습니다.');
-        }
-    });
-
-    return button;
+    return { display: fullName, role: '' };
 }
 
 async function reorderAgent(agentId, direction) {
@@ -50,27 +24,18 @@ async function reorderAgent(agentId, direction) {
 function createReorderControls(agent) {
     const controls = document.createElement('div');
     controls.className = 'reorder-controls';
-    controls.style.display = 'none';
-    controls.style.marginTop = '4px';
-    controls.style.gap = '4px';
 
     const leftButton = document.createElement('button');
     leftButton.type = 'button';
-    leftButton.className = 'reorder-btn reorder-left';
-    leftButton.textContent = '◀';
-    leftButton.title = `${agent.name} 왼쪽으로 이동`;
-    leftButton.style.fontSize = '10px';
-    leftButton.style.padding = '1px 4px';
-    leftButton.style.cursor = 'pointer';
+    leftButton.className = 'reorder-btn';
+    leftButton.textContent = '❮';
+    leftButton.title = `${agent.name} 왼쪽으로`;
 
     const rightButton = document.createElement('button');
     rightButton.type = 'button';
-    rightButton.className = 'reorder-btn reorder-right';
-    rightButton.textContent = '▶';
-    rightButton.title = `${agent.name} 오른쪽으로 이동`;
-    rightButton.style.fontSize = '10px';
-    rightButton.style.padding = '1px 4px';
-    rightButton.style.cursor = 'pointer';
+    rightButton.className = 'reorder-btn';
+    rightButton.textContent = '❯';
+    rightButton.title = `${agent.name} 오른쪽으로`;
 
     leftButton.addEventListener('click', (event) => {
         event.preventDefault();
@@ -125,28 +90,28 @@ function buildAgentItem(agent) {
     badgeSpan.textContent = '⚫ 대기 중';
     statusBadgeByAgentId.set(agent.id, badgeSpan);
 
-    const deleteBtn = createDeleteButton(agent);
-    if (deleteBtn) {
-        agentIcon.appendChild(deleteBtn);
-    }
     agentIcon.appendChild(iconNode);
     agentIcon.appendChild(badgeSpan);
 
     const agentInfo = document.createElement('div');
     agentInfo.className = 'agent-info';
 
+    const { display, role } = parseAgentName(agent.name);
+
     const nameDiv = document.createElement('div');
     nameDiv.className = 'agent-name';
-    nameDiv.textContent = agent.name;
+    nameDiv.textContent = display;
 
     const roleDiv = document.createElement('div');
     roleDiv.className = 'agent-role';
-    roleDiv.textContent = agent.expertise ? agent.expertise.split(',')[0].trim() : '에이전트';
+    roleDiv.textContent = role || (agent.expertise ? agent.expertise.split(',')[0].trim() : '');
 
     const reorderControls = createReorderControls(agent);
 
     agentInfo.appendChild(nameDiv);
-    agentInfo.appendChild(roleDiv);
+    if (roleDiv.textContent) {
+        agentInfo.appendChild(roleDiv);
+    }
     agentInfo.appendChild(reorderControls);
     agentWrapper.appendChild(agentIcon);
     agentWrapper.appendChild(agentInfo);
@@ -172,6 +137,38 @@ function buildAgentItem(agent) {
     return agentWrapper;
 }
 
+function buildTentItem() {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'agent-item tent-item';
+
+    const icon = document.createElement('div');
+    icon.className = 'agent-icon';
+    icon.title = '본진 (회의실)';
+
+    const image = document.createElement('img');
+    image.className = 'agent-img';
+    image.src = 'assets/fortress.png';
+    image.alt = '본진';
+    icon.appendChild(image);
+
+    const info = document.createElement('div');
+    info.className = 'agent-info';
+
+    const name = document.createElement('div');
+    name.className = 'agent-name';
+    name.textContent = '본진';
+
+    info.appendChild(name);
+    wrapper.appendChild(icon);
+    wrapper.appendChild(info);
+
+    wrapper.addEventListener('click', () => {
+        window.electronAPI.openMeetingRoom?.();
+    });
+
+    return wrapper;
+}
+
 async function renderAgents() {
     const agentListEl = document.getElementById('agent-list');
     if (!agentListEl) {
@@ -185,6 +182,7 @@ async function renderAgents() {
         agents.forEach((agent) => {
             agentListEl.appendChild(buildAgentItem(agent));
         });
+        agentListEl.appendChild(buildTentItem());
     } catch (error) {
         console.error('Failed to load agents:', error);
         agentListEl.innerHTML = '<div class="error">Load Error</div>';
@@ -192,22 +190,6 @@ async function renderAgents() {
 }
 
 function bindActions() {
-    document.getElementById('btn-add-agent')?.addEventListener('click', () => {
-        window.electronAPI.openAddAgent?.();
-    });
-
-    document.getElementById('btn-settings')?.addEventListener('click', () => {
-        window.electronAPI.openSettings?.();
-    });
-
-    document.getElementById('btn-hide-widget')?.addEventListener('click', () => {
-        window.electronAPI.hideWidget?.();
-    });
-
-    document.getElementById('btn-meeting')?.addEventListener('click', () => {
-        window.electronAPI.openMeetingRoom?.();
-    });
-
     document.getElementById('btn-quit')?.addEventListener('click', () => {
         window.electronAPI.quitApp?.();
     });
@@ -226,8 +208,23 @@ function bindRealtimeListeners() {
     }
 }
 
+function bindMousePassthrough() {
+    const container = document.querySelector('.widget-container');
+    if (!container || !window.electronAPI?.setIgnoreMouseEvents) {
+        return;
+    }
+    /* 콘텐츠 위에 마우스 → 클릭 활성화, 벗어나면 → 클릭 투과 */
+    container.addEventListener('mouseenter', () => {
+        window.electronAPI.setIgnoreMouseEvents(false);
+    });
+    container.addEventListener('mouseleave', () => {
+        window.electronAPI.setIgnoreMouseEvents(true);
+    });
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     bindActions();
+    bindMousePassthrough();
     await renderAgents();
     bindRealtimeListeners();
 });

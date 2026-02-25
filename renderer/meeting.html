@@ -59,13 +59,17 @@
                 </div>
 
                 <div class="settings-group">
-                    <label>🔄 라운드 수</label>
+                    <label class="round-label">
+                        🔄 토론 횟수
+                        <span class="round-tooltip" title="AI들이 순서대로 한 바퀴 발언하면 1회">ℹ️</span>
+                    </label>
                     <input type="number" class="round-input" min="1" max="10" value="3">
                 </div>
 
                 <!-- 하단 시작/중단 버튼 -->
                 <div class="sidebar-actions">
                     <button type="button" class="btn-start-meeting">▶ 회의 시작</button>
+                    <button type="button" class="btn-pause-meeting" disabled>⏸ 일시정지</button>
                     <button type="button" class="btn-stop-meeting" disabled>⏹ 중단</button>
                 </div>
 
@@ -79,6 +83,18 @@
                 <div class="speech-log" id="speech-log">
                     <!-- 실제 발언 데이터가 JS에 의해 여기에 동적으로 추가됩니다 -->
                 </div>
+
+                <div class="user-input-panel" id="meeting-user-input-panel" hidden>
+                    <textarea
+                        id="meeting-user-input"
+                        class="user-message-input"
+                        placeholder="사용자 의견을 추가하세요. (Enter 전송, Shift+Enter 줄바꿈)"
+                    ></textarea>
+                    <div class="user-input-actions">
+                        <button type="button" class="btn-send-user-message" disabled>📨 전송</button>
+                        <button type="button" class="btn-resume-meeting" disabled>▶ 재개</button>
+                    </div>
+                </div>
             </main>
 
         </div>
@@ -86,6 +102,7 @@
 
     <script src="js/theme.js"></script>
     <script src="js/markdown.js"></script>
+    <script src="js/meeting-speech.js"></script>
     <!-- 번개 스크립트 연결 -->
     <script src="js/meeting.js"></script>
 </body>

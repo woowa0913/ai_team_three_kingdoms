@@ -54,11 +54,75 @@ html {
     gap: 16px;
 }
 
+.theme-section {
+    background-color: var(--card-bg);
+    border: 2px solid var(--card-border);
+    /* provider-card와 동일한 두께 */
+    border-radius: var(--border-radius-base);
+    padding: 18px 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.theme-title {
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    /* API KEY 헤더와 동일한 느낌 */
+    color: var(--accent-gold);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.theme-options {
+    display: flex;
+    gap: 8px;
+}
+
+.theme-btn {
+    flex: 1;
+    border: 2px solid var(--border-color);
+    background: var(--bg-input);
+    color: var(--text-muted);
+    border-radius: 14px;
+    /* 치비 테마의 둥근 버튼 반경 통일 */
+    padding: 10px 12px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.theme-btn:hover {
+    border-color: var(--accent-gold-border);
+    background: var(--bg-hover);
+    color: var(--text-color);
+    transform: translateY(-2px);
+}
+
+.theme-btn.active {
+    border-color: var(--accent-gold);
+    background: var(--accent-gold-dim);
+    color: var(--accent-gold);
+    box-shadow:
+        0 0 0 2px var(--accent-gold-dim) inset,
+        0 4px 12px rgba(244, 192, 37, 0.2);
+    transform: translateY(-2px);
+}
+
 .provider-card {
-    background-color: rgba(255, 255, 255, 0.03);
-    border: 1px solid var(--border-color);
+    background-color: var(--card-bg);
+    /* theme-section과 동일 변수 사용 → 통일감 */
+    border: 2px solid var(--card-border);
     border-radius: var(--border-radius-base);
     padding: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
 .provider-header {
@@ -132,6 +196,11 @@ html {
 
 .btn-toggle-visibility:hover {
     color: var(--text-color);
+}
+.api-key-input::placeholder {
+    color: var(--text-muted);
+    font-style: italic;
+    opacity: 0.8;
 }
 
 /* 3. Footer / Buttons */

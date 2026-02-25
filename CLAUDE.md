@@ -64,6 +64,15 @@ ai-orchestra/
 │       ├── bungae-persona.md    # 번개(Codex) 페르소나 (필수 로드)
 │       └── electron-conventions.md
 ├── main.js                      # Electron 메인 프로세스
+├── tests/                       # Vitest 테스트
+├── main/
+│   ├── ipc-handlers.js          # IPC 채널 등록
+│   ├── ipc-chat-meeting-handlers.js # 채팅/회의 IPC 분리
+│   ├── store-config.js          # electron-store 공통 설정(암호화)
+│   ├── store-utils.js           # 스토어 유틸
+│   ├── store-migration.js       # 기본값 병합/마이그레이션
+│   ├── chat-history.js          # 채팅 히스토리 관리
+│   └── windows/                 # 창별 분리 모듈
 ├── preload.js                   # IPC 브릿지
 ├── package.json
 ├── renderer/
@@ -107,6 +116,7 @@ npm start          # 개발 모드 실행
 npm run dev        # DevTools 포함 실행
 npm run build      # macOS .app 빌드
 npm test           # 테스트 실행
+npm run test:watch # 테스트 watch
 ```
 
 ## Current Status
@@ -146,8 +156,37 @@ npm test           # 테스트 실행
   - [x] themes.css 전면 개편 (피치/크림/골드 파스텔 라운드 톤)
   - [x] dashboard.css 오리엔탈 배경, 만두 모양 버튼, 라운드 말풍선 등 세부 적용 완료
   - [x] widget.css 아이콘 및 버튼 원형(border-radius: 50%) 처리
-- [ ] Phase 3: E2E 통합 테스트 + 배포 준비
+- [~] Phase 3: E2E 통합 테스트 + 배포 준비 (진행 중, 2026-02-25)
+  - [x] 거대 파일 리팩터링(코드 분리)
+    - [x] `main/agent-store.js` → `chat-history.js`, `store-migration.js`, `store-utils.js` 분리
+    - [x] `main/window-manager.js` → `main/windows/*.js` 창별 분리
+    - [x] `main.js` IPC 핸들러 분리(`main/ipc-handlers.js`, `main/ipc-chat-meeting-handlers.js`)
+    - [x] `main/api-manager.js` → `api-shared.js` + `api-providers/*` 분리 (인터페이스 유지)
+  - [x] 테스트 프레임워크 구축 (Vitest)
+    - [x] `tests/meeting-engine.test.js`
+    - [x] `tests/api-manager.test.js`
+    - [x] `tests/agent-store.test.js`
+    - [x] `tests/ipc-handlers.integration.test.js`
+  - [x] 보안 하드닝
+    - [x] Store 암호화 옵션 공통화(`store-config.js`)
+    - [x] IPC 입력 검증(`agentId`, `provider`, 메시지 길이)
+    - [x] BrowserWindow 보안 옵션 강화(`sandbox: true`, `contextIsolation: true`)
+    - [x] 외부 URL 로딩 차단(`will-navigate`, `setWindowOpenHandler`)
+  - [~] 빌드 설정/패키징
+    - [x] `package.json` electron-builder 설정 보완(appId/productName/mac target/dmg background)
+    - [x] `.app` 산출 확인 (`dist/mac-arm64/AI Orchestra.app`)
+    - [x] `.zip` 산출 확인 (`dist/AI Orchestra-1.0.0-arm64-mac.zip`)
+    - [x] DMG 실패 fallback 적용: `mac.target`을 `zip` 단독으로 전환하여 `npm run build` 성공
 
+- [x] Phase 4: UX 개선 및 개별 API 키 기능 적용 완료 (2026-02-25)
+  - [x] Sprint 1: 장막 서브메뉴(팝업) UI 완비 (CSS/JS)
+  - [x] Sprint 2: 대시보드 UI 폴리싱 (에러 메시지 말풍선, 헤더 투명도 슬라이더, 테마 선택 버튼 고도화)
+  - [x] Sprint 3: 다중 AI 회의실 UX 업그레이드 (사용자 발언과 AI 발언 구분, 개별 패널, 슬라이드업 효과 적용)
+  - [x] Sprint 4: 에이전트별(개별/전역) API 키 저장 분리 및 설정 창 카드형 UI 100% 반영
+- [~] Phase 4.5: 위젯 리디자인/진입점 보강 (진행 중, 2026-02-25)
+  - [x] 위젯 서브메뉴 변경 이후 대시보드 헤더에 `⚙️ 설정` / `＋ 추가` 진입 버튼 복원
+  - [ ] 캐릭터 정사각 PNG(800x800) 및 본진(`fortress.png`) 에셋 교체
+  - [ ] 최신 실앱 스크린샷 4종 갱신(`docs/screenshots`)
 ## Important Notes
 - 위젯 고정: `alwaysOnTop: true` (생성 옵션) + `setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })` + `setAlwaysOnTop(true, 'floating')` (macOS level 지정 필수 — 미지정 시 fullscreen/Spaces 전환에서 소멸)
 - 회의실 AI 응답은 순차 스트리밍 (동시 아님, UX 혼란 방지)
@@ -156,3 +195,4 @@ npm test           # 테스트 실행
 - **VSCode/Claude Code에서 실행 시**: `ELECTRON_RUN_AS_NODE=1` 환경변수 충돌 주의
   - package.json에 `env -u ELECTRON_RUN_AS_NODE electron .` 적용 완료
   - 이 변수가 설정된 상태로 `electron .` 실행 시 `app is undefined` 오류 발생
+- Phase 3 현재 빌드 상태: DMG만 실패, `.app`/`.zip`는 생성 완료

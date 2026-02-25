@@ -1,150 +1,96 @@
-/* macOS Native Transparent Floating Widget
-   색상 변수는 themes.css 에서 관리. */
-
 body {
   margin: 0;
   padding: 0;
   font-family: 'Plus Jakarta Sans', 'Open Sans', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  /* 둥근 폰트 스타일 선호 */
   color: var(--text-color);
   background-color: transparent;
-  overflow: visible;
-  /* 상태 배지 짤림 방지 */
-  -webkit-app-region: drag;
-  /* 여백 드래그 가능 */
+  overflow: hidden;
+  -webkit-app-region: no-drag;
   display: flex;
   align-items: flex-end;
-  /* 창 하단 정렬 */
   justify-content: center;
   height: 100vh;
   box-sizing: border-box;
-  padding-bottom: 24px;
-  /* Dock 위 여백 좀 더 띄움 */
+  padding-bottom: 28px;
 }
 
-/* 전체 위젯 행 */
+::-webkit-scrollbar { display: none; }
+
+/* 전체 위젯 행 — 드래그 영역은 여기만 */
 .widget-container {
   display: flex;
   align-items: flex-end;
-  gap: 24px;
+  gap: 12px;
+  position: relative;
+  -webkit-app-region: drag;
 }
 
-/* 에이전트 목록 */
+/* 에이전트 목록 — 간격 줄임 */
 .agent-list {
   display: flex;
-  gap: 20px;
-  /* 에이전트 간 간격 넓힘 */
+  gap: 8px;
   align-items: flex-end;
   -webkit-app-region: no-drag;
 }
 
-/* 개별 에이전트 (아이콘 + 이름) */
+/* 개별 에이전트 */
 .agent-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   cursor: pointer;
   transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  /* 귀엽게 통통 튀는 애니메이션 */
   position: relative;
 }
 
 .agent-item:hover {
   transform: translateY(-8px) scale(1.1);
-  /* 더 귀엽게 튀어보이도록 */
 }
 
 .agent-item:hover .agent-icon {
-  border-color: rgba(255, 255, 255, 0.8);
-  box-shadow: 0 10px 25px rgba(253, 211, 106, 0.4);
-  /* 호버 시 따뜻한 후광 추가 */
+  filter: brightness(1.1);
 }
 
 .agent-icon {
-  width: 76px;
-  /* 살짝 더 큼직하고 귀엽게 */
-  height: 76px;
-  background-color: var(--bg-icon);
-  border: 3px solid var(--border-icon);
-  /* 테두리 두껍게 */
+  width: 96px;
+  height: 96px;
+  background-color: transparent;
+  border: none;
   border-radius: var(--border-radius-full);
-  /* 완전 원형으로 변경 */
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-  /* 부드러운 그림자 */
   display: flex;
   justify-content: center;
   align-items: center;
   position: relative;
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: filter 0.3s ease;
   overflow: visible;
 }
 
 .agent-icon .emoji {
-  font-size: 38px;
-  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.2));
-  /* 얕고 귀여운 그림자 */
+  font-size: 50px;
 }
 
 .agent-icon .agent-img {
-  width: 70px;
-  height: 70px;
-  border-radius: var(--border-radius-full);
-  /* 바깥 테두리에 맞춤 */
-  object-fit: cover;
+  width: 96px;
+  height: 96px;
+  border-radius: 0;
+  object-fit: contain;
   display: block;
 }
 
-/* hover 시 표시되는 삭제 버튼 - 귀여운 '엑스 만두' 느낌 */
-.delete-btn {
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  width: 24px;
-  height: 24px;
-  border: 2px solid #fff;
-  border-radius: 50%;
-  background: var(--accent-crimson);
-  color: #fff;
-  font-size: 12px;
-  font-weight: bold;
-  line-height: 1;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  padding: 0;
-  -webkit-app-region: no-drag;
-  transition: transform 0.2s, background 0.15s, border-color 0.15s;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-}
-
-.agent-item:hover .delete-btn {
-  display: flex;
-}
-
-.delete-btn:hover {
-  background: var(--accent-crimson-hover);
-  transform: scale(1.15) rotate(90deg);
-  /* 통통 튀며 회전 */
-}
-
-/* 상태 배지 - 둥글고 밝은 팻말 느낌 */
+/* 상태 배지 */
 .status-badge {
   position: absolute;
-  bottom: -10px;
+  bottom: -12px;
   left: 50%;
   transform: translateX(-50%);
   background-color: var(--badge-bg);
   color: var(--badge-color);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 800;
-  padding: 4px 10px;
-  border-radius: 12px;
+  padding: 5px 12px;
+  border-radius: 14px;
   border: 2px solid var(--border-icon);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   white-space: nowrap;
 }
 
@@ -154,20 +100,19 @@ body {
   border-color: rgba(255, 255, 255, 0.6);
 }
 
-/* 이름 + 역할 텍스트 - 귀여운 폰트 및 뭉개진 그림자 */
+/* 이름 + 역할 — 줄 분리 */
 .agent-info {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 2px;
   text-align: center;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-  /* 덜 날카롭게 */
-  padding-top: 6px;
+  padding-top: 8px;
+  -webkit-text-stroke: 0.3px rgba(0, 0, 0, 0.15);
 }
 
 .agent-name {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
   letter-spacing: 0.5px;
   color: var(--text-color);
@@ -175,99 +120,106 @@ body {
 
 .agent-role {
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--text-muted);
+  letter-spacing: 0.2px;
 }
 
-/* 우측 액션 버튼 그룹 - 커다란 조약돌 모양 버튼들 */
-.actions {
-  display: flex;
-  gap: 12px;
-  margin-left: 12px;
-  padding-bottom: 24px;
-  /* 이름 영역을 피하기 위해 padding-bottom 살짝 조절 */
-  -webkit-app-region: no-drag;
+/* 순서 이동 — 고급 셰브론 */
+.reorder-controls {
+  display: none;
+  gap: 6px;
+  margin-top: 2px;
 }
 
-.icon-button {
-  width: 48px;
-  height: 48px;
-  background-color: var(--bg-icon);
-  border: 2px solid var(--border-icon);
-  border-radius: 50%;
-  /* 원형 조약돌 */
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+.reorder-btn {
+  width: 22px;
+  height: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 10px;
+  line-height: 1;
   display: flex;
-  justify-content: center;
   align-items: center;
-  font-size: 20px;
-  color: var(--text-color);
+  justify-content: center;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+  padding: 0;
 }
 
-.icon-button:hover:not(:disabled) {
-  background-color: var(--bg-hover);
-  transform: translateY(-4px) scale(1.08);
-  /* 위로 살짝 쩜프 */
+.reorder-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: scale(1.1);
 }
 
-.icon-button:active:not(:disabled) {
-  transform: translateY(2px) scale(0.95);
-  /* 눌리는 느낌 확실히 */
+/* 본진 (회의실) */
+.tent-item .agent-icon .emoji {
+  font-size: 58px;
 }
 
-.icon-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  filter: grayscale(1);
+/* 닫기 버튼 — 고급스러운 흰색/회색, 호버 시 등장 */
+.btn-quit {
+  width: 44px;
+  height: 44px;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 18px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.3s ease, background 0.2s ease, border-color 0.2s ease;
+  -webkit-app-region: no-drag;
+  align-self: center;
+  margin-bottom: 40px;
+  flex-shrink: 0;
 }
 
-/* 위젯 숨기기 버튼: 따뜻한 골드 */
-.btn-hide-widget {
-  color: var(--accent-gold);
+.widget-container:hover .btn-quit {
+  opacity: 1;
 }
 
-.btn-hide-widget:hover:not(:disabled) {
-  background-color: var(--accent-gold-dim) !important;
-  border-color: var(--accent-gold-border);
+.btn-quit:hover {
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
-/* 에이전트 추가 버튼: 초록 부드러운 하이라이트 */
-.btn-add-agent {
-  color: var(--status-active);
-  font-size: 26px;
-  font-weight: 600;
-}
-
-.btn-add-agent:hover:not(:disabled) {
-  background-color: rgba(64, 201, 162, 0.15) !important;
-  border-color: rgba(64, 201, 162, 0.4);
-}
-
-/* 테마 전환 버튼: 현재 모드 아이콘 표시 */
-.btn-theme {
-  color: var(--accent-gold);
-}
-
-.btn-theme:hover:not(:disabled) {
-  background-color: var(--accent-gold-dim) !important;
-  border-color: var(--accent-gold-border);
+/* 라이트 모드 대응 */
+@media (prefers-color-scheme: light) {
+  .reorder-btn {
+    border-color: rgba(0, 0, 0, 0.12);
+    background: rgba(0, 0, 0, 0.04);
+    color: rgba(0, 0, 0, 0.35);
+  }
+  .reorder-btn:hover {
+    background: rgba(0, 0, 0, 0.1);
+    color: rgba(0, 0, 0, 0.7);
+    border-color: rgba(0, 0, 0, 0.2);
+  }
+  .btn-quit {
+    color: rgba(0, 0, 0, 0.25);
+  }
+  .btn-quit:hover {
+    color: rgba(0, 0, 0, 0.6);
+    background: rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.1);
+  }
 }
 
 /* 유틸리티 */
 .loading {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: bold;
   color: var(--text-color);
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .error {
   color: var(--accent-crimson);
-  font-size: 14px;
+  font-size: 16px;
   font-weight: bold;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }

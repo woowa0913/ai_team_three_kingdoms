@@ -12,20 +12,12 @@
 <body>
   <div class="widget-container">
     <div id="agent-list" class="agent-list">
-      <!-- Agent Icons will be rendered here dynamically -->
       <div class="loading">Agents Loading...</div>
     </div>
-    <div class="actions">
-      <button id="btn-add-agent" class="icon-button btn-add-agent" title="에이전트 추가">＋</button>
-      <button id="btn-meeting" class="icon-button btn-meeting" title="작전 회의실">👥</button>
-      <button id="btn-settings" class="icon-button btn-settings" title="설정">⚙️</button>
-      <button id="btn-theme" class="icon-button btn-theme" data-theme-toggle title="테마 전환">🖥️</button>
-      <button id="btn-hide-widget" class="icon-button btn-hide-widget" title="위젯 숨기기 (트레이에서 다시 표시)">⊟</button>
-      <button id="btn-quit" class="icon-button btn-quit" title="앱 종료">❌</button>
-    </div>
+    <button id="btn-quit" class="btn-quit" title="앱 종료">✕</button>
   </div>
 
-  <script src="js/theme.js"></script>
+  <!-- 위젯은 macOS 시스템 테마 자동 추종 (prefers-color-scheme) -->
   <script src="js/widget.js"></script>
 </body>
 

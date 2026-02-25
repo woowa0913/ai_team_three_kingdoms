@@ -1,392 +1,14 @@
-const Store = require('electron-store');
-const store = new Store();
-const API_KEY_MAP = {
-    anthropic: 'api-key-anthropic',
-    openai: 'api-key-openai',
-    google: 'api-key-google',
-};
-const DEFAULT_MODELS = {
-    anthropic: 'claude-3-7-sonnet-20250219',
-    openai: 'gpt-4o-mini',
-    google: 'gemini-2.0-flash',
-    ollama: 'llama-3',
-};
-function normalizeMessages(messages = [], maxMessages = 40) {
-    if (!Array.isArray(messages)) {
-        return [];
-    }
-    const normalized = messages
-        .filter((message) => message && (message.role === 'user' || message.role === 'assistant'))
-        .map((message) => ({
-            role: message.role,
-            content: typeof message.content === 'string' ? message.content : '',
-        }))
-        .filter((message) => message.content.length > 0);
-
-    const safeMax = Number.isFinite(maxMessages) ? Math.max(1, Math.floor(maxMessages)) : 40;
-    if (normalized.length <= safeMax) {
-        return normalized;
-    }
-
-    const firstUserIndex = normalized.findIndex((message) => message.role === 'user');
-    const sliced = normalized.slice(-safeMax);
-    if (firstUserIndex < 0) {
-        return sliced;
-    }
-    if (firstUserIndex >= normalized.length - safeMax) {
-        return sliced;
-    }
-
-    const firstUser = normalized[firstUserIndex];
-    const tailCount = Math.max(0, safeMax - 1);
-    const tail = tailCount === 0 ? [] : normalized.slice(-tailCount);
-    let merged = [firstUser, ...tail];
-    while (merged.length > safeMax) {
-        merged = merged.slice(1);
-    }
-    while (merged.length > 0 && merged[0].role !== 'user') {
-        merged = merged.slice(1);
-    }
-    return merged;
-}
-function getApiKey(provider) {
-    const keyName = API_KEY_MAP[provider];
-    if (!keyName) {
-        return null;
-    }
-    const apiKey = store.get(keyName, '');
-    if (typeof apiKey !== 'string' || apiKey.trim().length === 0) {
-        throw new Error(`${provider} API 키가 설정되지 않았습니다.`);
-    }
-    return apiKey.trim();
-}
-async function ensureStreamableResponse(response, providerLabel) {
-    if (!response.ok) {
-        const errorText = await response.text().catch(() => '');
-        const message = errorText.slice(0, 250) || response.statusText;
-        throw new Error(`${providerLabel} API 요청 실패 (${response.status}): ${message}`);
-    }
-    if (!response.body) {
-        throw new Error(`${providerLabel} 스트리밍 응답을 받을 수 없습니다.`);
-    }
-}
-function safeJsonParse(raw) {
-    try {
-        return JSON.parse(raw);
-    } catch (error) {
-        return null;
-    }
-}
-async function parseSseStream(response, onData) {
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = '';
-    while (true) {
-        const { value, done } = await reader.read();
-        if (done) {
-            break;
-        }
-        buffer += decoder.decode(value, { stream: true });
-        buffer = buffer.replace(/\r/g, '');
-        const segments = buffer.split('\n\n');
-        buffer = segments.pop() || '';
-        for (const segment of segments) {
-            if (!segment.trim()) {
-                continue;
-            }
-            const lines = segment.split('\n');
-            let eventType = 'message';
-            const dataLines = [];
-            for (const line of lines) {
-                if (line.startsWith('event:')) {
-                    eventType = line.slice(6).trim();
-                } else if (line.startsWith('data:')) {
-                    dataLines.push(line.slice(5).trimStart());
-                }
-            }
-            const data = dataLines.join('\n').trim();
-            if (!data) {
-                continue;
-            }
-            await onData({ eventType, data });
-        }
-    }
-    const rest = buffer + decoder.decode();
-    const remaining = rest.trim();
-    if (remaining) {
-        const line = remaining.startsWith('data:') ? remaining.slice(5).trim() : remaining;
-        if (line) {
-            await onData({ eventType: 'message', data: line });
-        }
-    }
-}
-async function parseNdjsonStream(response, onObject) {
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = '';
-    while (true) {
-        const { value, done } = await reader.read();
-        if (done) {
-            break;
-        }
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
-        for (const line of lines) {
-            const trimmed = line.trim();
-            if (!trimmed) {
-                continue;
-            }
-            const parsed = safeJsonParse(trimmed);
-            if (!parsed) {
-                continue;
-            }
-            await onObject(parsed);
-        }
-    }
-    const tail = (buffer + decoder.decode()).trim();
-    if (tail) {
-        const parsed = safeJsonParse(tail);
-        if (parsed) {
-            await onObject(parsed);
-        }
-    }
-}
-async function streamFromAnthropic(model, persona, messages, onChunk) {
-    const apiKey = getApiKey('anthropic');
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-            'content-type': 'application/json',
-            'x-api-key': apiKey,
-            'anthropic-version': '2023-06-01',
-        },
-        body: JSON.stringify({
-            model,
-            max_tokens: 2048,
-            stream: true,
-            system: persona || '',
-            messages: messages.map((message) => ({
-                role: message.role,
-                content: message.content,
-            })),
-        }),
-    });
-    await ensureStreamableResponse(response, 'Anthropic');
-    await parseSseStream(response, ({ data }) => {
-        if (data === '[DONE]') {
-            return;
-        }
-        const payload = safeJsonParse(data);
-        const chunk = payload?.delta?.text;
-        if (typeof chunk === 'string' && chunk.length > 0) {
-            onChunk(chunk);
-        }
-    });
-}
-async function streamFromOpenAI(model, persona, messages, onChunk) {
-    const apiKey = getApiKey('openai');
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-            'content-type': 'application/json',
-            authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-            model,
-            stream: true,
-            messages: [
-                ...(persona ? [{ role: 'system', content: persona }] : []),
-                ...messages.map((message) => ({
-                    role: message.role,
-                    content: message.content,
-                })),
-            ],
-        }),
-    });
-    await ensureStreamableResponse(response, 'OpenAI');
-    await parseSseStream(response, ({ data }) => {
-        if (data === '[DONE]') {
-            return;
-        }
-        const payload = safeJsonParse(data);
-        const chunk = payload?.choices?.[0]?.delta?.content;
-        if (typeof chunk === 'string' && chunk.length > 0) {
-            onChunk(chunk);
-        }
-    });
-}
-async function streamFromGoogle(model, persona, messages, onChunk) {
-    const apiKey = getApiKey('google');
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:streamGenerateContent?alt=sse&key=${encodeURIComponent(apiKey)}`;
-    let lastMergedText = '';
-    const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-            'content-type': 'application/json',
-        },
-        body: JSON.stringify({
-            system_instruction: persona ? { parts: [{ text: persona }] } : undefined,
-            contents: messages.map((message) => ({
-                role: message.role === 'assistant' ? 'model' : 'user',
-                parts: [{ text: message.content }],
-            })),
-        }),
-    });
-    await ensureStreamableResponse(response, 'Google');
-    await parseSseStream(response, ({ data }) => {
-        if (data === '[DONE]') {
-            return;
-        }
-        const payload = safeJsonParse(data);
-        if (!payload) {
-            return;
-        }
-        const mergedText = (payload.candidates || [])
-            .flatMap((candidate) => candidate?.content?.parts || [])
-            .map((part) => part?.text || '')
-            .join('');
-        if (!mergedText) {
-            return;
-        }
-        let delta = mergedText;
-        if (mergedText.startsWith(lastMergedText)) {
-            delta = mergedText.slice(lastMergedText.length);
-        }
-        lastMergedText = mergedText;
-        if (delta.length > 0) {
-            onChunk(delta);
-        }
-    });
-}
-async function streamFromOllama(model, persona, messages, onChunk) {
-    let response;
-    try {
-        response = await fetch('http://localhost:11434/api/chat', {
-            method: 'POST',
-            headers: {
-                'content-type': 'application/json',
-            },
-            body: JSON.stringify({
-                model,
-                stream: true,
-                messages: [
-                    ...(persona ? [{ role: 'system', content: persona }] : []),
-                    ...messages.map((message) => ({
-                        role: message.role,
-                        content: message.content,
-                    })),
-                ],
-            }),
-        });
-    } catch (error) {
-        if (
-            error &&
-            error.name === 'TypeError' &&
-            typeof error.message === 'string' &&
-            error.message.toLowerCase().includes('fetch failed')
-        ) {
-            throw new Error('Ollama가 실행 중이지 않습니다. localhost:11434 서버를 확인해주세요.');
-        }
-        throw error;
-    }
-    await ensureStreamableResponse(response, 'Ollama');
-    await parseNdjsonStream(response, (payload) => {
-        const chunk = payload?.message?.content;
-        if (typeof chunk === 'string' && chunk.length > 0) {
-            onChunk(chunk);
-        }
-    });
-}
-
-async function getOllamaModels() {
-    try {
-        const response = await fetch('http://localhost:11434/api/tags', {
-            method: 'GET',
-            headers: {
-                accept: 'application/json',
-            },
-        });
-        if (!response.ok) {
-            return [];
-        }
-        const payload = await response.json().catch(() => null);
-        const models = Array.isArray(payload?.models) ? payload.models : [];
-        return models
-            .map((model) => (typeof model?.name === 'string' ? model.name.trim() : ''))
-            .filter(Boolean);
-    } catch (_error) {
-        return [];
-    }
-}
-
-async function testAnthropicApiKey(apiKey) {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-            'content-type': 'application/json',
-            'x-api-key': apiKey,
-            'anthropic-version': '2023-06-01',
-        },
-        body: JSON.stringify({
-            model: DEFAULT_MODELS.anthropic,
-            max_tokens: 1,
-            messages: [{ role: 'user', content: 'ping' }],
-        }),
-    });
-
-    if (response.ok) {
-        return { ok: true };
-    }
-
-    const errorText = await response.text().catch(() => '');
-    return { ok: false, error: `Anthropic API 요청 실패 (${response.status}): ${errorText.slice(0, 160) || response.statusText}` };
-}
-
-async function testOpenAIApiKey(apiKey) {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-            'content-type': 'application/json',
-            authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-            model: DEFAULT_MODELS.openai,
-            max_tokens: 1,
-            messages: [{ role: 'user', content: 'ping' }],
-        }),
-    });
-
-    if (response.ok) {
-        return { ok: true };
-    }
-
-    const errorText = await response.text().catch(() => '');
-    return { ok: false, error: `OpenAI API 요청 실패 (${response.status}): ${errorText.slice(0, 160) || response.statusText}` };
-}
-
-async function testGoogleApiKey(apiKey) {
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(DEFAULT_MODELS.google)}:generateContent?key=${encodeURIComponent(apiKey)}`;
-    const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-            'content-type': 'application/json',
-        },
-        body: JSON.stringify({
-            contents: [{ role: 'user', parts: [{ text: 'ping' }] }],
-            generationConfig: {
-                maxOutputTokens: 1,
-            },
-        }),
-    });
-
-    if (response.ok) {
-        return { ok: true };
-    }
-
-    const errorText = await response.text().catch(() => '');
-    return { ok: false, error: `Google API 요청 실패 (${response.status}): ${errorText.slice(0, 160) || response.statusText}` };
-}
+const {
+    DEFAULT_MODELS,
+    normalizeMessages,
+    safeJsonParse,
+    parseSseStream,
+    parseNdjsonStream,
+} = require('./api-shared');
+const { streamFromAnthropic, testAnthropicApiKey } = require('./api-providers/anthropic');
+const { streamFromOpenAI, testOpenAIApiKey } = require('./api-providers/openai');
+const { streamFromGoogle, testGoogleApiKey } = require('./api-providers/google');
+const { streamFromOllama, getOllamaModels } = require('./api-providers/ollama');
 
 async function testApiKey(provider, key) {
     const normalizedProvider = typeof provider === 'string' ? provider.trim().toLowerCase() : '';
@@ -397,13 +19,13 @@ async function testApiKey(provider, key) {
 
     try {
         if (normalizedProvider === 'anthropic') {
-            return await testAnthropicApiKey(apiKey);
+            return await testAnthropicApiKey(apiKey, DEFAULT_MODELS.anthropic);
         }
         if (normalizedProvider === 'openai') {
-            return await testOpenAIApiKey(apiKey);
+            return await testOpenAIApiKey(apiKey, DEFAULT_MODELS.openai);
         }
         if (normalizedProvider === 'google') {
-            return await testGoogleApiKey(apiKey);
+            return await testGoogleApiKey(apiKey, DEFAULT_MODELS.google);
         }
         return { ok: false, error: '지원하지 않는 provider입니다.' };
     } catch (error) {
@@ -411,10 +33,11 @@ async function testApiKey(provider, key) {
     }
 }
 
-async function streamChat(provider, model, persona, messages, onChunk, onEnd, onError) {
+async function streamChat(provider, model, persona, messages, onChunk, onEnd, onError, apiKeyOverride) {
     const safeOnChunk = typeof onChunk === 'function' ? onChunk : () => {};
     const safeOnEnd = typeof onEnd === 'function' ? onEnd : () => {};
     const safeOnError = typeof onError === 'function' ? onError : () => {};
+
     try {
         const normalizedProvider = typeof provider === 'string' ? provider.toLowerCase() : '';
         const normalizedMessages = normalizeMessages(messages, 40);
@@ -422,25 +45,34 @@ async function streamChat(provider, model, persona, messages, onChunk, onEnd, on
         if (!resolvedModel) {
             throw new Error('유효한 모델 정보가 없습니다.');
         }
+
         if (normalizedProvider === 'anthropic') {
-            await streamFromAnthropic(resolvedModel, persona, normalizedMessages, safeOnChunk);
+            await streamFromAnthropic(resolvedModel, persona, normalizedMessages, safeOnChunk, apiKeyOverride);
         } else if (normalizedProvider === 'openai') {
-            await streamFromOpenAI(resolvedModel, persona, normalizedMessages, safeOnChunk);
+            await streamFromOpenAI(resolvedModel, persona, normalizedMessages, safeOnChunk, apiKeyOverride);
         } else if (normalizedProvider === 'google') {
-            await streamFromGoogle(resolvedModel, persona, normalizedMessages, safeOnChunk);
+            await streamFromGoogle(resolvedModel, persona, normalizedMessages, safeOnChunk, apiKeyOverride);
         } else if (normalizedProvider === 'ollama') {
-            await streamFromOllama(resolvedModel, persona, normalizedMessages, safeOnChunk);
+            await streamFromOllama(resolvedModel, persona, normalizedMessages, safeOnChunk, apiKeyOverride);
         } else {
             throw new Error(`지원하지 않는 provider입니다: ${provider}`);
         }
+
         safeOnEnd();
     } catch (error) {
         safeOnError(error);
         throw error;
     }
 }
+
 module.exports = {
     streamChat,
     getOllamaModels,
     testApiKey,
+    _private: {
+        normalizeMessages,
+        safeJsonParse,
+        parseSseStream,
+        parseNdjsonStream,
+    },
 };

@@ -43,6 +43,9 @@ html {
     display: flex;
     align-items: center;
     gap: 16px;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .agent-emoji {
@@ -71,12 +74,26 @@ html {
     flex-direction: column;
     position: relative;
     gap: 2px;
+    min-width: 0;
+    flex: 1;
 }
 
 .agent-name {
     font-size: 18px;
     font-weight: 800;
     color: var(--accent-gold);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.agent-role-label {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* 에이전트 전환 드롭다운 트리거 */
@@ -175,6 +192,40 @@ html {
     display: flex;
     gap: 12px;
     -webkit-app-region: no-drag;
+    align-items: center;
+}
+
+.opacity-control {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    /* 헤더 icon-btn과 동일한 둥근 질감 */
+    border: 2px solid var(--border-icon);
+    background: var(--bg-icon);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    transition: border-color 0.2s ease;
+}
+
+.opacity-control:hover {
+    border-color: var(--accent-gold-border);
+}
+
+.opacity-icon {
+    font-size: 13px;
+    opacity: 0.75;
+    flex-shrink: 0;
+}
+
+#opacity-slider {
+    width: 80px;
+    accent-color: var(--accent-gold);
+    cursor: pointer;
+    height: 4px;
+    border-radius: 4px;
 }
 
 .icon-btn {
@@ -187,6 +238,21 @@ html {
     /* 스쿼클에 가깝게 */
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     font-size: 18px;
+}
+
+.btn-settings-header,
+.btn-add-agent-header,
+.btn-delete-agent-header {
+    font-size: 13px;
+    font-weight: 700;
+    padding: 8px 12px;
+    white-space: nowrap;
+}
+
+.btn-delete-agent-header:hover {
+    background: var(--accent-crimson-dim);
+    color: var(--accent-crimson);
+    border-color: var(--accent-crimson);
 }
 
 .icon-btn:hover {
@@ -364,6 +430,26 @@ html {
     /* 말풍선 꼬리 */
     color: var(--message-ai-text);
     font-weight: 500;
+}
+
+/* 에러 말풍선: 과하지 않게, 배경에 살짝 깔리는 아이콘+텍스트 스타일 */
+.error-content {
+    color: var(--accent-crimson);
+    font-style: italic;
+    font-size: 14px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    position: relative;
+    padding: 4px 0;
+}
+
+.error-content::before {
+    content: '⚠️';
+    font-style: normal;
+    flex-shrink: 0;
+    font-size: 14px;
+    margin-top: 1px;
 }
 
 /* 스트리밍 커서: 둥근 모양 */
